@@ -32,20 +32,23 @@ beforeAll(async () => {
     await registerUser(testFranchise));
   console.log(testUser.email);
 });
-
-test("register", async () => {
-  //register fails without email (assume others will also fail)
-  const badUser = { name: "pizza diner", password: "a" };
-  const badRegisterRes = await request(app).post("/api/auth").send(badUser);
-  expect(badRegisterRes.status).toBe(400);
+describe("register", () => {
+  it("fails without email", async () => {
+    //register fails without email (assume others will also fail)
+    const badUser = { name: "pizza diner", password: "a" };
+    const badRegisterRes = await request(app).post("/api/auth").send(badUser);
+    expect(badRegisterRes.status).toBe(400);
+  });
 
   //register succeeds on appropriate user and returns valid authtoken
-  const registerRes = await request(app).post("/api/auth").send(testUser);
-  expect(registerRes.status).toBe(200);
-  const testRegisterAuth = registerRes.body.token;
-  expect(testRegisterAuth).toMatch(
-    /^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/,
-  );
+  it("succeeds when appropriate and returns valid authtoken", async () => {
+    const registerRes = await request(app).post("/api/auth").send(testUser);
+    expect(registerRes.status).toBe(200);
+    const testRegisterAuth = registerRes.body.token;
+    expect(testRegisterAuth).toMatch(
+      /^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/,
+    );
+  });
 });
 
 test("login", async () => {
@@ -101,6 +104,8 @@ describe("updateUser", () => {
       .put(`/api/user/${testUserId}`)
       .set({ Authorization: `Bearer ${testUserAuthToken}` })
       .send(updatedUser);
+
+    expect(updateUserRes.status).toBe(200);
     //name has updated
     expect(updateUserRes.body.user.name).toBe(updatedUser.name);
     //else remains the same
@@ -139,4 +144,10 @@ describe("updateUser", () => {
   });
 
   // TODO: adjust to ensure emails cannot be registered to two users!!!
+});
+
+test("getFranchises", async () => {
+  const getFranchiseRes = await request(app).get("/api/franchise/").send();
+  expect(getFranchiseRes.status).toBe(200);
+  expect(getFranchiseRes.body.franchises).toBeDefined();
 });
