@@ -10,6 +10,10 @@ beforeAll(async () => {
   testUserAuthToken = registerRes.body.token;
 });
 
+test('register', async () => {
+  expect(testUserAuthToken).toMatch(/^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/);
+});
+
 test('login', async () => {
   const loginRes = await request(app).put('/api/auth').send(testUser);
   expect(loginRes.status).toBe(200);
