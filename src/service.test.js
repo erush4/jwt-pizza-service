@@ -6,6 +6,7 @@ const testUser = {
   email: "reg@test.com",
   password: "a",
 };
+
 let testUserAuthToken;
 let testUserId;
 
@@ -70,6 +71,32 @@ test("getUser", async () => {
     .send();
   expect(getUserRes.status).toBe(200);
   //returns appropriate user object
-  expect(getUserRes.body.id).toBe(testUserId)
+  expect(getUserRes.body.id).toBe(testUserId);
 });
 
+
+describe("updateUser", () => {
+  it("properly updates the user", async () => {
+    const newUser = { name: "new Name", email: testUser.email, password: "a" };
+    const updateUserRes = await request(app)
+      .put(`/api/user/${testUserId}`)
+      .set({ Authorization: `Bearer ${testUserAuthToken}` })
+      .send(newUser);
+    //name has updated
+    expect(updateUserRes.body.user.name).toBe(newUser.name);
+    //else remains the same
+    expect(updateUserRes.body.user.email).toBe(newUser.email);
+    expect(updateUserRes.body.user.id).toBe(testUserId);
+    //keep authtoken consistent
+    testUserAuthToken = updateUserRes.body.token;
+
+    //update back to avoid issues with other tests
+    const undoRes = await request(app)
+      .put(`/api/user/${testUserId}`)
+      .set({ Authorization: `Bearer ${testUserAuthToken}` })
+      .send(testUser);
+    testUserAuthToken = undoRes.body.token;
+  });
+
+  // TODO: adjust to ensure emails cannot be registered to two users!!!
+});
