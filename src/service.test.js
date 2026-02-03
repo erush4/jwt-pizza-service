@@ -1,22 +1,28 @@
 const request = require("supertest");
 const app = require("./service");
-
+const config = require("./config.js")
 const testUser = {
   name: "pizza diner",
   email: "reg@test.com",
   password: "a",
 };
 
-const testFranchise = {
+const testFranchiseUser = {
   name: "pizza franchise",
   email: "temp@test.com",
   password: "b",
+};
+
+const testFranchise = {
+  id: "",
+  name: "Something",
 };
 
 let testUserAuthToken;
 let testUserId;
 let testFranchiseAuthtoken;
 let testFranchiseId;
+let testAdminAuthToken;
 
 async function registerUser(user) {
   user.email = Math.random().toString(36).substring(2, 12) + "@test.com";
@@ -29,8 +35,10 @@ async function registerUser(user) {
 beforeAll(async () => {
   ({ token: testUserAuthToken, id: testUserId } = await registerUser(testUser));
   ({ token: testFranchiseAuthtoken, id: testFranchiseId } =
-    await registerUser(testFranchise));
-  console.log(testUser.email);
+    await registerUser(testFranchiseUser));
+  testAdminAuthToken = (
+    await request(app).put("/api/auth").send(config.defaultAdmin)
+  ).body.token;
 });
 describe("register", () => {
   it("fails without email", async () => {
@@ -150,4 +158,16 @@ test("getFranchises", async () => {
   const getFranchiseRes = await request(app).get("/api/franchise/").send();
   expect(getFranchiseRes.status).toBe(200);
   expect(getFranchiseRes.body.franchises).toBeDefined();
+});
+
+describe("getUserFranchises", () => {
+  it("returns empty when no franchises", async () => {
+    const getUserFranchiseRes = await request(app)
+      .get(`/api/franchise/${testFranchiseId}`)
+      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
+      .send();
+    expect(getUserFranchiseRes.status).toBe(200);
+    expect(getUserFranchiseRes.body).toMatchObject([]);
+  });
+
 });
