@@ -5,7 +5,6 @@ const testUser = {
   name: "pizza diner",
   email: "reg@test.com",
   password: "a",
-  id: 0,
 };
 let testUserAuthToken;
 let testUserId;
@@ -63,3 +62,14 @@ test("logout", async () => {
   const loginRes = await request(app).put("/api/auth").send(testUser);
   testUserAuthToken = loginRes.body.token;
 });
+
+test("getUser", async () => {
+  const getUserRes = await request(app)
+    .get("/api/user/me")
+    .set({ Authorization: `Bearer ${testUserAuthToken}` })
+    .send();
+  expect(getUserRes.status).toBe(200);
+  //returns appropriate user object
+  expect(getUserRes.body.id).toBe(testUserId)
+});
+
