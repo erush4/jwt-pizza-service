@@ -7,14 +7,30 @@ const testUser = {
   password: "a",
 };
 
+const testFranchise = {
+  name: "pizza franchise",
+  email: "temp@test.com",
+  password: "b",
+};
+
 let testUserAuthToken;
 let testUserId;
+let testFranchiseAuthtoken;
+let testFranchiseId;
+
+async function registerUser(user) {
+  user.email = Math.random().toString(36).substring(2, 12) + "@test.com";
+  const registerRes = await request(app).post("/api/auth").send(user);
+  const token = registerRes.body.token;
+  const id = registerRes.body.user.id;
+  return { token, id };
+}
 
 beforeAll(async () => {
-  testUser.email = Math.random().toString(36).substring(2, 12) + "@test.com";
-  const registerRes = await request(app).post("/api/auth").send(testUser);
-  testUserAuthToken = registerRes.body.token;
-  testUserId = registerRes.body.user.id;
+  ({ token: testUserAuthToken, id: testUserId } = await registerUser(testUser));
+  ({ token: testFranchiseAuthtoken, id: testFranchiseId } =
+    await registerUser(testFranchise));
+  console.log(testUser.email);
 });
 
 test("register", async () => {
@@ -74,18 +90,22 @@ test("getUser", async () => {
   expect(getUserRes.body.id).toBe(testUserId);
 });
 
-
 describe("updateUser", () => {
   it("properly updates the user", async () => {
-    const newUser = { name: "new Name", email: testUser.email, password: "a" };
+    const updatedUser = {
+      name: "new Name",
+      email: testUser.email,
+      password: "a",
+    };
     const updateUserRes = await request(app)
       .put(`/api/user/${testUserId}`)
       .set({ Authorization: `Bearer ${testUserAuthToken}` })
-      .send(newUser);
+      .send(updatedUser);
     //name has updated
-    expect(updateUserRes.body.user.name).toBe(newUser.name);
+    expect(updateUserRes.body.user.name).toBe(updatedUser.name);
     //else remains the same
-    expect(updateUserRes.body.user.email).toBe(newUser.email);
+    expect(updateUserRes.body.user.email).toBe(updatedUser.email);
+
     expect(updateUserRes.body.user.id).toBe(testUserId);
     //keep authtoken consistent
     testUserAuthToken = updateUserRes.body.token;
@@ -96,6 +116,26 @@ describe("updateUser", () => {
       .set({ Authorization: `Bearer ${testUserAuthToken}` })
       .send(testUser);
     testUserAuthToken = undoRes.body.token;
+  });
+
+  it("fails when not user or admin", async () => {
+    const updatedUser = {
+      name: "new Name",
+      email: testUser.email,
+      password: "a",
+    };
+    const updateUserRes = await request(app)
+      .put(`/api/user/${testUserId}`)
+      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
+      .send(updatedUser);
+    expect(updateUserRes.status).toBe(403);
+
+    // user is not changing
+    const getUserRes = await request(app)
+      .get("/api/user/me")
+      .set({ Authorization: `Bearer ${testUserAuthToken}` })
+      .send();
+    expect(getUserRes.body.name).toBe(testUser.name);
   });
 
   // TODO: adjust to ensure emails cannot be registered to two users!!!
