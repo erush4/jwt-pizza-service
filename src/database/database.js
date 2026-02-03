@@ -345,8 +345,10 @@ class DB {
         }
 
         if (!dbExists) {
-          const defaultAdmin = { name: '常用名字', email: 'a@jwt.com', password: 'admin', roles: [{ role: Role.Admin }] };
-          this.addUser(defaultAdmin);
+          this.addUser({
+            ...config.defaultAdmin,
+            roles: [{ role: Role.Admin }],
+          });
         }
       } finally {
         connection.end();
@@ -360,6 +362,7 @@ class DB {
     const [rows] = await connection.execute(`SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?`, [config.db.connection.database]);
     return rows.length > 0;
   }
+
 }
 
 const db = new DB();
