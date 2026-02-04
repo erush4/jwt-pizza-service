@@ -124,7 +124,7 @@ franchiseRouter.delete(
   "/:franchiseId",
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
-  const franchiseId = Number(req.params.franchiseId);
+    const franchiseId = Number(req.params.franchiseId);
     const franchise = await DB.getFranchise({ id: franchiseId });
     if (
       !franchise ||

@@ -6,13 +6,13 @@ const config = require("./src/config.js");
 module.exports = async () => {
   const files = fs
     .readdirSync(__dirname)
-    .filter(f => f.startsWith("test-db-info-") && f.endsWith(".json"));
+    .filter((f) => f.startsWith("test-db-info-") && f.endsWith(".json"));
 
   const { host, user, password } = config.db.connection;
 
   for (const file of files) {
     const info = JSON.parse(
-      fs.readFileSync(path.join(__dirname, file), "utf8")
+      fs.readFileSync(path.join(__dirname, file), "utf8"),
     );
 
     const connection = await mysql.createConnection({ host, user, password });

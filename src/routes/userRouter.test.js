@@ -4,7 +4,6 @@ const {
   makeTestUser,
   makeTestFranchiseUser,
   registerUser,
-  getAdminToken,
 } = require("./testHelpers");
 
 let testUserAuthToken, testUserId;
