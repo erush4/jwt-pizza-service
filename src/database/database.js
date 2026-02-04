@@ -423,7 +423,7 @@ class DB {
     return this._getConnection();
   }
 
-  async _getConnection(setUse = true) {
+  async _getConnection() {
     const connection = await mysql.createConnection({
       host: config.db.connection.host,
       user: config.db.connection.user,
@@ -431,19 +431,20 @@ class DB {
       connectTimeout: config.db.connection.connectTimeout,
       decimalNumbers: true,
     });
-    if (setUse) {
-      await connection.query(`USE ${config.db.connection.database}`);
-    }
+    await connection.query(`USE ${config.db.connection.database}`);
     return connection;
   }
 
   async initializeDatabase() {
     try {
-      const connection = await this._getConnection(false);
+      const connection = await this._getConnection();
       try {
         const dbExists = await this.checkDatabaseExists(connection);
         console.log(
-          dbExists ? "Database exists" : "Database does not exist, creating it",
+          (dbExists
+            ? `Database ${config.db.connection.database} exists`
+            : `Database does not exist, creating ${config.db.connection.database}`) +
+            ` at ${config.db.connection.host}`,
         );
 
         await connection.query(
