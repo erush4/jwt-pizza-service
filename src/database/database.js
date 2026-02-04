@@ -423,7 +423,7 @@ class DB {
     return this._getConnection();
   }
 
-  async _getConnection() {
+  async _getConnection(setUse = true) {
     const connection = await mysql.createConnection({
       host: config.db.connection.host,
       user: config.db.connection.user,
@@ -431,20 +431,19 @@ class DB {
       connectTimeout: config.db.connection.connectTimeout,
       decimalNumbers: true,
     });
-    await connection.query(`USE ${config.db.connection.database}`);
+    if (setUse) {
+      await connection.query(`USE ${config.db.connection.database}`);
+    }
     return connection;
   }
 
   async initializeDatabase() {
     try {
-      const connection = await this._getConnection();
+      const connection = await this._getConnection(false);
       try {
         const dbExists = await this.checkDatabaseExists(connection);
         console.log(
-          (dbExists
-            ? `Database ${config.db.connection.database} exists`
-            : `Database does not exist, creating ${config.db.connection.database}`) +
-            ` at ${config.db.connection.host}`,
+          dbExists ? "Database exists" : "Database does not exist, creating it",
         );
 
         await connection.query(
@@ -481,6 +480,7 @@ class DB {
   }
 
   async checkDatabaseExists(connection) {
+    console.log(`Checking if database ${config.db.connection.database} exists...`)
     const [rows] = await connection.execute(
       `SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?`,
       [config.db.connection.database],
