@@ -20,6 +20,7 @@ let testUserId;
 let testFranchiseAuthtoken;
 let testFranchiseUserId;
 let testAdminAuthToken;
+let testFranchiseInstance;
 
 async function registerUser(user) {
   user.email = Math.random().toString(36).substring(2, 12) + "@test.com";
@@ -37,6 +38,7 @@ async function createFranchise() {
     .set({ Authorization: `Bearer ${testAdminAuthToken}` })
     .send(testFranchise);
   expect(createFranchiseRes.status).toBe(200);
+  testFranchiseInstance = createFranchiseRes.body;
   return createFranchiseRes;
 }
 
@@ -220,10 +222,35 @@ describe("createFranchise", () => {
     expect(createFranchiseRes.status).toBe(403);
   });
 
-  it("properly creates when authorized", async ()=>{
-    const createFranchiseRes = await createFranchise();
+  it("properly creates when authorized", async () => {
+    await createFranchise();
+    expect(testFranchiseInstance).toEqual(
+      expect.objectContaining({
+        id: expect.any(Number),
+        name: testFranchise.name,
+        stores: [],
+        admins: expect.arrayContaining([
+          expect.objectContaining({
+            email: testFranchiseUser.email,
+            name: testFranchiseUser.name,
+            id: testFranchiseUserId,
+          }),
+        ]),
+      }),
+    );
   });
 });
+
+// describe("deleteFranchise", () => {
+//   it("rejects when unauthorized", async () => { //this is new functionality
+//     await createFranchise();
+//     const deleteFranchiseRes = await request(app)
+//       .delete(`/api/franchise/${testFranchiseInstance.id}`)
+//       .set({ Authorization: `Bearer ${testUserAuthToken}` })
+//       .send();
+//     expect(deleteFranchiseRes.status).toBe(403);
+//   });
+// });
 
 afterAll(async () => {
   //something
