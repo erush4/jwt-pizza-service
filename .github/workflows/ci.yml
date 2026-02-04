@@ -63,6 +63,16 @@ jobs:
               password: '${{ secrets.ADMIN_PASSWORD }}',
               roles: [{ role: Role.Admin }],
             },
+            testUsers: {
+              diner: {
+                email: "testd@jwt.com",
+                password: "testdiner",
+              },
+              franchisee: {
+                email: "testf@jwt.com",
+                password: "testfranchisee",
+              },
+            },
           };" > src/config.js
 
       - name: Tests
