@@ -1,6 +1,6 @@
 const request = require("supertest");
 const app = require("./service");
-const config = require("./config.js")
+// const config = require("./config.js");
 const testUser = {
   name: "pizza diner",
   email: "reg@test.com",
@@ -13,16 +13,16 @@ const testFranchiseUser = {
   password: "b",
 };
 
-const testFranchise = {
-  id: "",
-  name: "Something",
-};
+// const testFranchise = {
+//   id: "",
+//   name: "Something",
+// };
 
 let testUserAuthToken;
 let testUserId;
 let testFranchiseAuthtoken;
 let testFranchiseId;
-let testAdminAuthToken;
+// let testAdminAuthToken;
 
 async function registerUser(user) {
   user.email = Math.random().toString(36).substring(2, 12) + "@test.com";
@@ -36,9 +36,9 @@ beforeAll(async () => {
   ({ token: testUserAuthToken, id: testUserId } = await registerUser(testUser));
   ({ token: testFranchiseAuthtoken, id: testFranchiseId } =
     await registerUser(testFranchiseUser));
-  testAdminAuthToken = (
-    await request(app).put("/api/auth").send(config.defaultAdmin)
-  ).body.token;
+  // testAdminAuthToken = (
+  //   await request(app).put("/api/auth").send(config.defaultAdmin)
+  // ).body.token;
 });
 describe("register", () => {
   it("fails without email", async () => {
@@ -169,5 +169,28 @@ describe("getUserFranchises", () => {
     expect(getUserFranchiseRes.status).toBe(200);
     expect(getUserFranchiseRes.body).toMatchObject([]);
   });
+  // it("returns franchise when one exists", async () => {
+  //   await request(app)
+  //     .post("/api/franchise")
+  //     .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
+  //     .send(testFranchise);
+  //   const getUserFranchiseRes = await request(app)
+  //     .get(`/api/franchise/${testFranchiseId}`)
+  //     .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
+  //     .send();
+  //   expect(getUserFranchiseRes.status).toBe(200);
+  //   expect(getUserFranchiseRes.body).toEqual(
+  //     expect.arrayContaining([
+  //       expect.objectContaining({
+  //         name: testFranchise.name,
+  //         admins: expect.any(Array),
+  //         stores: expect.any(Array),
+  //       }),
+  //     ]),
+  //   );
+  // });
+});
 
+afterAll(async () => {
+  //something
 });
