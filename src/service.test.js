@@ -31,11 +31,13 @@ async function registerUser(user) {
 }
 
 async function createFranchise() {
+  testFranchise.name = testFranchise.name + "I";
   const createFranchiseRes = await request(app)
     .post("/api/franchise/")
     .set({ Authorization: `Bearer ${testAdminAuthToken}` })
     .send(testFranchise);
   expect(createFranchiseRes.status).toBe(200);
+  return createFranchiseRes;
 }
 
 beforeAll(async () => {
@@ -48,10 +50,11 @@ beforeAll(async () => {
   testFranchise = {
     stores: [],
     id: "",
-    name: "thing",
+    name: "test franchise ",
     admins: [{ email: testFranchiseUser.email }],
   };
 });
+
 describe("register", () => {
   it("fails without email", async () => {
     //register fails without email (assume others will also fail)
@@ -205,6 +208,20 @@ describe("getUserFranchises", () => {
         }),
       ]),
     );
+  });
+});
+
+describe("createFranchise", () => {
+  it("rejects when unauthorized", async () => {
+    const createFranchiseRes = await request(app)
+      .post("/api/franchise/")
+      .set({ Authorization: `Bearer ${testUserAuthToken}` })
+      .send(testFranchise);
+    expect(createFranchiseRes.status).toBe(403);
+  });
+
+  it("properly creates when authorized", async ()=>{
+    const createFranchiseRes = await createFranchise();
   });
 });
 
