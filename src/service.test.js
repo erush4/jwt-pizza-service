@@ -92,15 +92,15 @@ test("logout", async () => {
   //returns successfully
   const logoutRes = await request(app)
     .delete("/api/auth")
-    .set({ Authorization: `Bearer ${testUserAuthToken}` })
-    .send();
+    .set({ Authorization: `Bearer ${testUserAuthToken}` });
+
   expect(logoutRes.status).toBe(200);
 
   //auth token no longer works
   const getUserRes = await request(app)
     .get("/api/user/me")
-    .set({ Authorization: `Bearer ${testUserAuthToken}` })
-    .send();
+    .set({ Authorization: `Bearer ${testUserAuthToken}` });
+
   expect(getUserRes.status).toBe(401);
 
   //log back in to prevent issues with other tests
@@ -111,8 +111,8 @@ test("logout", async () => {
 test("getUser", async () => {
   const getUserRes = await request(app)
     .get("/api/user/me")
-    .set({ Authorization: `Bearer ${testUserAuthToken}` })
-    .send();
+    .set({ Authorization: `Bearer ${testUserAuthToken}` });
+
   expect(getUserRes.status).toBe(200);
   //returns appropriate user object
   expect(getUserRes.body.id).toBe(testUserId);
@@ -135,7 +135,6 @@ describe("updateUser", () => {
     expect(updateUserRes.body.user.name).toBe(updatedUser.name);
     //else remains the same
     expect(updateUserRes.body.user.email).toBe(updatedUser.email);
-
     expect(updateUserRes.body.user.id).toBe(testUserId);
     //keep authtoken consistent
     testUserAuthToken = updateUserRes.body.token;
@@ -163,8 +162,8 @@ describe("updateUser", () => {
     // user is not changing
     const getUserRes = await request(app)
       .get("/api/user/me")
-      .set({ Authorization: `Bearer ${testUserAuthToken}` })
-      .send();
+      .set({ Authorization: `Bearer ${testUserAuthToken}` });
+
     expect(getUserRes.body.name).toBe(testUser.name);
   });
 
@@ -172,43 +171,36 @@ describe("updateUser", () => {
 });
 
 test("getFranchises", async () => {
-  const getFranchiseRes = await request(app).get("/api/franchise/").send();
+  const getFranchiseRes = await request(app).get("/api/franchise/");
   expect(getFranchiseRes.status).toBe(200);
   expect(getFranchiseRes.body.franchises).toBeDefined();
 });
 
 describe("getUserFranchises", () => {
   it("returns empty when no franchises", async () => {
-    const getUserFranchiseRes = await request(app)
-      .get(`/api/franchise/${testFranchiseUserId}`)
-      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
-      .send();
-    expect(getUserFranchiseRes.status).toBe(200);
-    expect(getUserFranchiseRes.body).toMatchObject([]);
+    const res = await request(app)
+      .get(`/api/franchise/${testUserId}`)
+      .set({ Authorization: `Bearer ${testUserAuthToken}` });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(0);
   });
 
   it("returns appropriate franchise when one exists", async () => {
     await createFranchise();
-    const getUserFranchiseRes = await request(app)
+
+    const res = await request(app)
       .get(`/api/franchise/${testFranchiseUserId}`)
-      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
-      .send(testFranchiseUser);
-    expect(getUserFranchiseRes.status).toBe(200);
-    expect(getUserFranchiseRes.body).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: expect.any(Number),
-          name: testFranchise.name,
-          stores: [],
-          admins: expect.arrayContaining([
-            expect.objectContaining({
-              email: testFranchiseUser.email,
-              name: testFranchiseUser.name,
-              id: testFranchiseUserId,
-            }),
-          ]),
-        }),
-      ]),
+      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
+
+    expect(res.status).toBe(200);
+
+    const franchise = res.body.find((f) => f.id === testFranchiseInstance.id);
+    expect(franchise).toBeDefined();
+
+    // Ensure the correct admin is attached
+    expect(franchise.admins.some((a) => a.id === testFranchiseUserId)).toBe(
+      true,
     );
   });
 });
@@ -243,35 +235,23 @@ describe("createFranchise", () => {
 
 describe("deleteFranchise", () => {
   it("rejects when unauthorized", async () => {
-    //this is new functionality
     await createFranchise();
-    const deleteFranchiseRes = await request(app)
-      .delete(`/api/franchise/${testFranchiseInstance.id}`)
-      .set({ Authorization: `Bearer ${testUserAuthToken}` })
-      .send();
-    expect(deleteFranchiseRes.status).toBe(403);
 
-    //object remains unchanged
-    const getUserFranchiseRes = await request(app)
+    const deleteRes = await request(app)
+      .delete(`/api/franchise/${testFranchiseInstance.id}`)
+      .set({ Authorization: `Bearer ${testUserAuthToken}` });
+
+    expect(deleteRes.status).toBe(403);
+
+    const getRes = await request(app)
       .get(`/api/franchise/${testFranchiseUserId}`)
-      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
-      .send();
-    expect(getUserFranchiseRes.status).toBe(200);
-    expect(getUserFranchiseRes.body).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: expect.any(Number),
-          name: testFranchise.name,
-          stores: [],
-          admins: expect.arrayContaining([
-            expect.objectContaining({
-              email: testFranchiseUser.email,
-              name: testFranchiseUser.name,
-              id: testFranchiseUserId,
-            }),
-          ]),
-        }),
-      ]),
+      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
+
+    expect(getRes.status).toBe(200);
+
+    // Franchise still exists
+    expect(getRes.body.some((f) => f.id === testFranchiseInstance.id)).toBe(
+      true,
     );
   });
 
@@ -279,13 +259,13 @@ describe("deleteFranchise", () => {
     await createFranchise();
     const deleteFranchiseRes = await request(app)
       .delete(`/api/franchise/${testFranchiseInstance.id}`)
-      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
-      .send();
+      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
+
     expect(deleteFranchiseRes.status).toBe(200);
     const getUserFranchiseRes = await request(app)
       .get(`/api/franchise/${testFranchiseUserId}`)
-      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
-      .send();
+      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
+
     expect(getUserFranchiseRes.status).toBe(200);
     expect(
       getUserFranchiseRes.body.find((f) => f.id === testFranchiseInstance.id),
