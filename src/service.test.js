@@ -22,6 +22,7 @@ let testFranchiseUserId;
 let testAdminAuthToken;
 let testFranchiseInstance;
 const testStoreName = "test store";
+let testStoreInstance;
 
 async function registerUser(user) {
   user.email = Math.random().toString(36).substring(2, 12) + "@test.com";
@@ -41,6 +42,15 @@ async function createFranchise() {
   expect(createFranchiseRes.status).toBe(200);
   testFranchiseInstance = createFranchiseRes.body;
   return createFranchiseRes;
+}
+
+async function createStore() {
+  const createStoreRes = await request(app)
+    .post(`/api/franchise/${testFranchiseInstance.id}/store`)
+    .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
+    .send({ name: testStoreName });
+  expect(createStoreRes.status).toBe(200);
+  testStoreInstance = createStoreRes.body;
 }
 
 beforeAll(async () => {
@@ -289,15 +299,9 @@ describe("createStore", () => {
   it("properly creates when authorized", async () => {
     await createFranchise();
 
-    const res = await request(app)
-      .post(`/api/franchise/${testFranchiseInstance.id}/store`)
-      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
-      .send({ name: testStoreName });
+    await createStore();
 
-    expect(res.status).toBe(200);
-
-    const store = res.body;
-    expect(store).toEqual(
+    expect(testStoreInstance).toEqual(
       expect.objectContaining({
         id: expect.any(Number),
         name: testStoreName,
@@ -313,7 +317,55 @@ describe("createStore", () => {
       (f) => f.id === testFranchiseInstance.id,
     );
     expect(franchise).toBeDefined();
-    expect(franchise.stores.some((s) => s.id === store.id)).toBe(true);
+    expect(franchise.stores.some((s) => s.id === testStoreInstance.id)).toBe(true);
+  });
+});
+
+describe("deleteStore", () => {
+  it("rejects when unauthorized", async () => {
+    await createFranchise();
+    await createStore();
+
+    const storeId = testStoreInstance.id;
+
+    const deleteRes = await request(app)
+      .delete(`/api/franchise/${testFranchiseInstance.id}/store/${storeId}`)
+      .set({ Authorization: `Bearer ${testUserAuthToken}` });
+    expect(deleteRes.status).toBe(403);
+
+    // Confirm store still exists
+    const getRes = await request(app)
+      .get(`/api/franchise/${testFranchiseUserId}`)
+      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
+
+    const franchise = getRes.body.find(
+      (f) => f.id === testFranchiseInstance.id,
+    );
+    expect(franchise).toBeDefined();
+    expect(franchise.stores.some((s) => s.id === storeId)).toBe(true);
+  });
+
+  it("accepts when authorized", async () => {
+    await createFranchise();
+    await createStore();
+
+    const storeId = testStoreInstance.id;
+    const deleteRes = await request(app)
+      .delete(`/api/franchise/${testFranchiseInstance.id}/store/${storeId}`)
+      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
+
+    expect(deleteRes.status).toBe(200);
+
+    // Confirm store is gone
+    const getRes = await request(app)
+      .get(`/api/franchise/${testFranchiseUserId}`)
+      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
+
+    const franchise = getRes.body.find(
+      (f) => f.id === testFranchiseInstance.id,
+    );
+    expect(franchise).toBeDefined();
+    expect(franchise.stores.find((s) => s.id === storeId)).toBeUndefined();
   });
 });
 
