@@ -39,7 +39,7 @@ jobs:
 
       - name: Write config file
         run: |
-          echo "const { Role } = require("./model/model");
+          echo "const { Role } = require('./model/model\');
           module.exports = {
             jwtSecret: '${{ secrets.JWT_SECRET }}',
             db: {
