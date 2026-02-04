@@ -187,7 +187,7 @@ describe("getUserFranchises", () => {
     expect(getUserFranchiseRes.body).toMatchObject([]);
   });
 
-  it("returns franchise when one exists", async () => {
+  it("returns appropriate franchise when one exists", async () => {
     await createFranchise();
     const getUserFranchiseRes = await request(app)
       .get(`/api/franchise/${testFranchiseUserId}`)
@@ -242,13 +242,52 @@ describe("createFranchise", () => {
 });
 
 describe("deleteFranchise", () => {
-  it("rejects when unauthorized", async () => { //this is new functionality
+  it("rejects when unauthorized", async () => {
+    //this is new functionality
     await createFranchise();
     const deleteFranchiseRes = await request(app)
       .delete(`/api/franchise/${testFranchiseInstance.id}`)
       .set({ Authorization: `Bearer ${testUserAuthToken}` })
       .send();
     expect(deleteFranchiseRes.status).toBe(403);
+
+    //object remains unchanged
+    const getUserFranchiseRes = await request(app)
+      .get(`/api/franchise/${testFranchiseUserId}`)
+      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
+      .send();
+    expect(getUserFranchiseRes.status).toBe(200);
+    expect(getUserFranchiseRes.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: expect.any(Number),
+          name: testFranchise.name,
+          stores: [],
+          admins: expect.arrayContaining([
+            expect.objectContaining({
+              email: testFranchiseUser.email,
+              name: testFranchiseUser.name,
+              id: testFranchiseUserId,
+            }),
+          ]),
+        }),
+      ]),
+    );
+  });
+
+  it("accepts when authorized", async () => {
+    await createFranchise();
+    const deleteFranchiseRes = await request(app)
+      .delete(`/api/franchise/${testFranchiseInstance.id}`)
+      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
+      .send();
+    expect(deleteFranchiseRes.status).toBe(200);
+    const getUserFranchiseRes = await request(app)
+      .get(`/api/franchise/${testFranchiseUserId}`)
+      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
+      .send();
+    expect(getUserFranchiseRes.status).toBe(200);
+    expect(getUserFranchiseRes.body).toMatchObject([]);
   });
 });
 
