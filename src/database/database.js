@@ -443,7 +443,10 @@ class DB {
       try {
         const dbExists = await this.checkDatabaseExists(connection);
         console.log(
-          dbExists ? "Database exists" : "Database does not exist, creating it",
+          (dbExists
+            ? `Database ${config.db.connection} exists`
+            : `Database does not exist, creating ${config.db.connection.database}`) +
+            ` at ${config.db.connection.host}`,
         );
 
         await connection.query(
@@ -480,7 +483,9 @@ class DB {
   }
 
   async checkDatabaseExists(connection) {
-    console.log(`Checking if database ${config.db.connection.database} exists...`)
+    console.log(
+      `Checking if database ${config.db.connection.database} exists...`,
+    );
     const [rows] = await connection.execute(
       `SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?`,
       [config.db.connection.database],
