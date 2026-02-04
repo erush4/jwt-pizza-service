@@ -13,6 +13,13 @@ const testFranchiseUser = {
   password: "b",
 };
 
+const testPizza = {
+  title: "testPizza",
+  description: "just a test",
+  image: "notreal.png",
+  price: 0.01,
+};
+
 let testFranchise;
 
 let testUserAuthToken;
@@ -320,7 +327,9 @@ describe("createStore", () => {
       (f) => f.id === testFranchiseInstance.id,
     );
     expect(franchise).toBeDefined();
-    expect(franchise.stores.some((s) => s.id === testStoreInstance.id)).toBe(true);
+    expect(franchise.stores.some((s) => s.id === testStoreInstance.id)).toBe(
+      true,
+    );
   });
 });
 
@@ -373,10 +382,35 @@ describe("deleteStore", () => {
 });
 
 describe("getMenu", () => {
-  it("returns empty when no menu items exist", async () => {
+  it("returns proper menu", async () => {
+    await request(app)
+      .put("/api/order/menu")
+      .set({ Authorization: `Bearer ${testAdminAuthToken}` })
+      .send(testPizza);
     const getMenuRes = await request(app).get("/api/order/menu");
+    expect(getMenuRes.status).toBe(200);
+    expect(getMenuRes.body.some((m) => m.title === testPizza.title)).toBe(true);
+  });
+});
+
+describe("addMenuItem", () => {
+  it("rejects when user is unauthorized", async () => {
+    const res = await request(app)
+      .put("/api/order/menu")
+      .set({ Authorization: `Bearer ${testUserAuthToken}` })
+      .send(testPizza);
+
+    expect(res.status).toBe(403);
+  });
+
+  it("properly adds menu item when authorized", async () => {
+    const res = await request(app)
+      .put("/api/order/menu")
+      .set({ Authorization: `Bearer ${testAdminAuthToken}` })
+      .send(testPizza);
+
     expect(res.status).toBe(200);
-    expect(res.body).toEqual([]);
+    expect(res.body.some((m) => m.title === testPizza.title)).toBe(true);
   });
 });
 
