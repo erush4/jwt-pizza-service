@@ -19,4 +19,4 @@ info[worker] = {
 fs.writeFileSync(infoPath, JSON.stringify(info, null, 2), "utf8");
 
 // Set environment variables for the test run
-process.env.DB_NAME = dbName;
+process.env.TEST_DB_NAME = dbName;
