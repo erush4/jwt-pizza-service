@@ -1,6 +1,7 @@
 module.exports = {
-  setupFiles: ["./jest.setup.js"],
-  globalTeardown: "./jest.teardown.js",
+  setupFiles: ["<rootDir>/jest.setup.js"],
+  globalTeardown: "<rootDir>/jest.teardown.js",
   collectCoverage: true,
   coverageReporters: ["json-summary", "text"],
+  testEnvironment: "node",
 };

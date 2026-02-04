@@ -444,7 +444,7 @@ class DB {
         const dbExists = await this.checkDatabaseExists(connection);
         console.log(
           (dbExists
-            ? `Database ${config.db.connection} exists`
+            ? `Database ${config.db.connection.database} exists`
             : `Database does not exist, creating ${config.db.connection.database}`) +
             ` at ${config.db.connection.host}`,
         );
