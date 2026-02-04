@@ -242,6 +242,7 @@ describe("createFranchise", () => {
       }),
     );
   });
+  //TODO: test that franchisee role is added
 });
 
 describe("deleteFranchise", () => {
@@ -282,6 +283,8 @@ describe("deleteFranchise", () => {
       getUserFranchiseRes.body.find((f) => f.id === testFranchiseInstance.id),
     ).toBeUndefined();
   });
+
+  //TODO: test that franchisee role is removed when needed
 });
 
 describe("createStore", () => {
@@ -369,6 +372,14 @@ describe("deleteStore", () => {
   });
 });
 
+describe("getMenu", () => {
+  it("returns empty when no menu items exist", async () => {
+    const getMenuRes = await request(app).get("/api/order/menu");
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+});
+
 afterAll(async () => {
-  //something
+  //nothing, for now
 });
