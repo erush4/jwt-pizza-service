@@ -27,6 +27,7 @@ let testFranchiseId;
 async function registerUser(user) {
   user.email = Math.random().toString(36).substring(2, 12) + "@test.com";
   const registerRes = await request(app).post("/api/auth").send(user);
+  expect(registerRes.status).toBe(200);
   const token = registerRes.body.token;
   const id = registerRes.body.user.id;
   return { token, id };
