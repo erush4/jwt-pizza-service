@@ -414,6 +414,21 @@ describe("addMenuItem", () => {
   });
 });
 
+describe("createOrder", () => {
+  it("rejects when unauthorized", async () => {
+    const res = await request(app)
+      .post("/api/order")
+      .send({
+        franchiseId: 1,
+        storeId: 1,
+        items: [],
+      });
+
+    expect(res.status).toBe(401);
+  });
+
+});
+
 afterAll(async () => {
   //nothing, for now
 });
