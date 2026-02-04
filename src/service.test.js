@@ -241,16 +241,16 @@ describe("createFranchise", () => {
   });
 });
 
-// describe("deleteFranchise", () => {
-//   it("rejects when unauthorized", async () => { //this is new functionality
-//     await createFranchise();
-//     const deleteFranchiseRes = await request(app)
-//       .delete(`/api/franchise/${testFranchiseInstance.id}`)
-//       .set({ Authorization: `Bearer ${testUserAuthToken}` })
-//       .send();
-//     expect(deleteFranchiseRes.status).toBe(403);
-//   });
-// });
+describe("deleteFranchise", () => {
+  it("rejects when unauthorized", async () => { //this is new functionality
+    await createFranchise();
+    const deleteFranchiseRes = await request(app)
+      .delete(`/api/franchise/${testFranchiseInstance.id}`)
+      .set({ Authorization: `Bearer ${testUserAuthToken}` })
+      .send();
+    expect(deleteFranchiseRes.status).toBe(403);
+  });
+});
 
 afterAll(async () => {
   //something
