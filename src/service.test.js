@@ -1,6 +1,6 @@
 const request = require("supertest");
 const app = require("./service");
-// const config = require("./config.js");
+const config = require("./config.js");
 const testUser = {
   name: "pizza diner",
   email: "reg@test.com",
@@ -13,16 +13,13 @@ const testFranchiseUser = {
   password: "b",
 };
 
-// const testFranchise = {
-//   id: "",
-//   name: "Something",
-// };
+let testFranchise;
 
 let testUserAuthToken;
 let testUserId;
 let testFranchiseAuthtoken;
-let testFranchiseId;
-// let testAdminAuthToken;
+let testFranchiseUserId;
+let testAdminAuthToken;
 
 async function registerUser(user) {
   user.email = Math.random().toString(36).substring(2, 12) + "@test.com";
@@ -35,11 +32,17 @@ async function registerUser(user) {
 
 beforeAll(async () => {
   ({ token: testUserAuthToken, id: testUserId } = await registerUser(testUser));
-  ({ token: testFranchiseAuthtoken, id: testFranchiseId } =
+  ({ token: testFranchiseAuthtoken, id: testFranchiseUserId } =
     await registerUser(testFranchiseUser));
-  // testAdminAuthToken = (
-  //   await request(app).put("/api/auth").send(config.defaultAdmin)
-  // ).body.token;
+  testAdminAuthToken = (
+    await request(app).put("/api/auth").send(config.defaultAdmin)
+  ).body.token;
+  testFranchise = {
+    stores: [],
+    id: "",
+    name: "thing",
+    admins: [{ email: testFranchiseUser.email }],
+  };
 });
 describe("register", () => {
   it("fails without email", async () => {
@@ -164,32 +167,41 @@ test("getFranchises", async () => {
 describe("getUserFranchises", () => {
   it("returns empty when no franchises", async () => {
     const getUserFranchiseRes = await request(app)
-      .get(`/api/franchise/${testFranchiseId}`)
+      .get(`/api/franchise/${testFranchiseUserId}`)
       .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
       .send();
     expect(getUserFranchiseRes.status).toBe(200);
     expect(getUserFranchiseRes.body).toMatchObject([]);
   });
-  // it("returns franchise when one exists", async () => {
-  //   await request(app)
-  //     .post("/api/franchise")
-  //     .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
-  //     .send(testFranchise);
-  //   const getUserFranchiseRes = await request(app)
-  //     .get(`/api/franchise/${testFranchiseId}`)
-  //     .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
-  //     .send();
-  //   expect(getUserFranchiseRes.status).toBe(200);
-  //   expect(getUserFranchiseRes.body).toEqual(
-  //     expect.arrayContaining([
-  //       expect.objectContaining({
-  //         name: testFranchise.name,
-  //         admins: expect.any(Array),
-  //         stores: expect.any(Array),
-  //       }),
-  //     ]),
-  //   );
-  // });
+  it("returns franchise when one exists", async () => {
+    const thing = await request(app)
+      .post("/api/franchise/")
+      .set({ Authorization: `Bearer ${testAdminAuthToken}` })
+      .send(testFranchise);
+    console.log(thing.body);
+    expect(thing.status).toBe(200);
+    const getUserFranchiseRes = await request(app)
+      .get(`/api/franchise/${testFranchiseUserId}`)
+      .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
+      .send(testFranchiseUser);
+    expect(getUserFranchiseRes.status).toBe(200);
+    expect(getUserFranchiseRes.body).toEqual(
+  expect.arrayContaining([
+    expect.objectContaining({
+      id: expect.any(Number),
+      name: testFranchise.name,
+      stores: [],
+      admins: expect.arrayContaining([
+        expect.objectContaining({
+          email: testFranchiseUser.email,
+          name: testFranchiseUser.name,
+          id: testFranchiseUserId,
+        }),
+      ]),
+    }),
+  ])
+);
+  });
 });
 
 afterAll(async () => {
