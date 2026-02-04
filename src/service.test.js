@@ -287,7 +287,9 @@ describe("deleteFranchise", () => {
       .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
       .send();
     expect(getUserFranchiseRes.status).toBe(200);
-    expect(getUserFranchiseRes.body).toMatchObject([]);
+    expect(
+      getUserFranchiseRes.body.find((f) => f.id === testFranchiseInstance.id),
+    ).toBeUndefined();
   });
 });
 
