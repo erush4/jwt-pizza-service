@@ -30,6 +30,14 @@ async function registerUser(user) {
   return { token, id };
 }
 
+async function createFranchise() {
+  const createFranchiseRes = await request(app)
+    .post("/api/franchise/")
+    .set({ Authorization: `Bearer ${testAdminAuthToken}` })
+    .send(testFranchise);
+  expect(createFranchiseRes.status).toBe(200);
+}
+
 beforeAll(async () => {
   ({ token: testUserAuthToken, id: testUserId } = await registerUser(testUser));
   ({ token: testFranchiseAuthtoken, id: testFranchiseUserId } =
@@ -173,34 +181,30 @@ describe("getUserFranchises", () => {
     expect(getUserFranchiseRes.status).toBe(200);
     expect(getUserFranchiseRes.body).toMatchObject([]);
   });
+
   it("returns franchise when one exists", async () => {
-    const thing = await request(app)
-      .post("/api/franchise/")
-      .set({ Authorization: `Bearer ${testAdminAuthToken}` })
-      .send(testFranchise);
-    console.log(thing.body);
-    expect(thing.status).toBe(200);
+    await createFranchise();
     const getUserFranchiseRes = await request(app)
       .get(`/api/franchise/${testFranchiseUserId}`)
       .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
       .send(testFranchiseUser);
     expect(getUserFranchiseRes.status).toBe(200);
     expect(getUserFranchiseRes.body).toEqual(
-  expect.arrayContaining([
-    expect.objectContaining({
-      id: expect.any(Number),
-      name: testFranchise.name,
-      stores: [],
-      admins: expect.arrayContaining([
+      expect.arrayContaining([
         expect.objectContaining({
-          email: testFranchiseUser.email,
-          name: testFranchiseUser.name,
-          id: testFranchiseUserId,
+          id: expect.any(Number),
+          name: testFranchise.name,
+          stores: [],
+          admins: expect.arrayContaining([
+            expect.objectContaining({
+              email: testFranchiseUser.email,
+              name: testFranchiseUser.name,
+              id: testFranchiseUserId,
+            }),
+          ]),
         }),
       ]),
-    }),
-  ])
-);
+    );
   });
 });
 
