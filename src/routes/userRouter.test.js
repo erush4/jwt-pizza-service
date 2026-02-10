@@ -1,14 +1,10 @@
 const request = require("supertest");
 const app = require("../service");
-const {
-  makeTestUser,
-  makeTestFranchiseUser,
-  registerUser,
-} = require("./testHelpers");
+const { makeTestUser, registerUser } = require("./testHelpers");
 
 let testUserAuthToken, testUserId;
 let testFranchiseAuthtoken;
-const testFranchiseUser = makeTestFranchiseUser();
+const testFranchiseUser = makeTestUser();
 const testUser = makeTestUser();
 
 beforeAll(async () => {

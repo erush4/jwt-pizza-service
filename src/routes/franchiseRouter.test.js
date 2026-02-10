@@ -1,61 +1,37 @@
 const request = require("supertest");
 const {
   makeTestUser,
-  makeTestFranchiseUser,
   registerUser,
   getAdminToken,
+  createFranchise,
+  createStore,
+  testStore,
+  makeTestFranchise,
 } = require("./testHelpers");
 const app = require("../service");
 
 let testAdminAuthToken;
 let testUserAuthToken, testUserId;
 let testFranchiseAuthtoken, testFranchiseUserId;
-let testFranchise, testFranchiseInstance;
-let testStoreInstance;
+let testFranchise;
 
 const testUser = makeTestUser();
-const testFranchiseUser = makeTestFranchiseUser();
-const testStoreName = "test store";
-
-async function createFranchise() {
-  testFranchise.name = testFranchise.name + "I";
-  const createFranchiseRes = await request(app)
-    .post("/api/franchise/")
-    .set({ Authorization: `Bearer ${testAdminAuthToken}` })
-    .send(testFranchise);
-  expect(createFranchiseRes.status).toBe(200);
-  testFranchiseInstance = createFranchiseRes.body;
-  return createFranchiseRes;
-}
-
-async function createStore() {
-  const createStoreRes = await request(app)
-    .post(`/api/franchise/${testFranchiseInstance.id}/store`)
-    .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
-    .send({ name: testStoreName });
-  expect(createStoreRes.status).toBe(200);
-  testStoreInstance = createStoreRes.body;
-}
+const testFranchiseUser = makeTestUser();
 
 beforeAll(async () => {
   ({ token: testUserAuthToken, id: testUserId } = await registerUser(testUser));
   ({ token: testFranchiseAuthtoken, id: testFranchiseUserId } =
     await registerUser(testFranchiseUser));
   testAdminAuthToken = await getAdminToken();
-  testFranchise = {
-    stores: [],
-    id: "",
-    name: "test franchise ",
-    admins: [{ email: testFranchiseUser.email }],
-  };
+  testFranchise = makeTestFranchise(testFranchiseUser.email);
 });
 
 describe("franchiseRouter", () => {
   describe("getFranchises", () => {
     it("returns something", async () => {
-      const getFranchiseRes = await request(app).get("/api/franchise/");
-      expect(getFranchiseRes.status).toBe(200);
-      expect(getFranchiseRes.body.franchises).toEqual(expect.any(Array));
+      const getFranchisesRes = await request(app).get("/api/franchise/");
+      expect(getFranchisesRes.status).toBe(200);
+      expect(getFranchisesRes.body.franchises).toEqual(expect.any(Array));
     });
 
     //TODO: Ensure returns are appropriate if franchises exist
@@ -63,24 +39,28 @@ describe("franchiseRouter", () => {
 
   describe("getUserFranchises", () => {
     it("returns empty when no franchises", async () => {
-      const res = await request(app)
+      const getUserFranchisesRes = await request(app)
         .get(`/api/franchise/${testUserId}`)
         .set({ Authorization: `Bearer ${testUserAuthToken}` });
 
-      expect(res.status).toBe(200);
-      expect(res.body).toHaveLength(0);
+      expect(getUserFranchisesRes.status).toBe(200);
+      expect(getUserFranchisesRes.body).toHaveLength(0);
     });
 
     it("returns appropriate franchise when one exists", async () => {
-      await createFranchise();
+      const testFranchiseInstance = (
+        await createFranchise(testAdminAuthToken, testFranchise)
+      ).body;
 
-      const res = await request(app)
+      const getUserFranchisesRes = await request(app)
         .get(`/api/franchise/${testFranchiseUserId}`)
         .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
 
-      expect(res.status).toBe(200);
+      expect(getUserFranchisesRes.status).toBe(200);
 
-      const franchise = res.body.find((f) => f.id === testFranchiseInstance.id);
+      const franchise = getUserFranchisesRes.body.find(
+        (f) => f.id === testFranchiseInstance.id,
+      );
       expect(franchise).toBeDefined();
 
       // Ensure the correct admin is attached
@@ -94,15 +74,13 @@ describe("franchiseRouter", () => {
 
   describe("createFranchise", () => {
     it("rejects when unauthorized", async () => {
-      const createFranchiseRes = await request(app)
-        .post("/api/franchise/")
-        .set({ Authorization: `Bearer ${testUserAuthToken}` })
-        .send(testFranchise);
-      expect(createFranchiseRes.status).toBe(403);
+      await createFranchise(testUserAuthToken, testFranchise, 403);
     });
 
     it("properly creates when authorized", async () => {
-      await createFranchise();
+      const testFranchiseInstance = (
+        await createFranchise(testAdminAuthToken, testFranchise)
+      ).body;
       expect(testFranchiseInstance).toEqual(
         expect.objectContaining({
           id: expect.any(Number),
@@ -124,40 +102,48 @@ describe("franchiseRouter", () => {
 
   describe("deleteFranchise", () => {
     it("rejects when unauthorized", async () => {
-      await createFranchise();
+      const testFranchiseInstance = (
+        await createFranchise(testAdminAuthToken, testFranchise)
+      ).body;
 
-      const deleteRes = await request(app)
+      const deleteFranchiseRes = await request(app)
         .delete(`/api/franchise/${testFranchiseInstance.id}`)
         .set({ Authorization: `Bearer ${testUserAuthToken}` });
 
-      expect(deleteRes.status).toBe(403);
+      expect(deleteFranchiseRes.status).toBe(403);
 
-      const getRes = await request(app)
+      const getUserFranchisesRes = await request(app)
         .get(`/api/franchise/${testFranchiseUserId}`)
         .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
 
-      expect(getRes.status).toBe(200);
+      expect(getUserFranchisesRes.status).toBe(200);
 
       // Franchise still exists
-      expect(getRes.body.some((f) => f.id === testFranchiseInstance.id)).toBe(
-        true,
-      );
+      expect(
+        getUserFranchisesRes.body.some(
+          (f) => f.id === testFranchiseInstance.id,
+        ),
+      ).toBe(true);
     });
 
     it("accepts when authorized", async () => {
-      await createFranchise();
+      const testFranchiseInstance = (
+        await createFranchise(testAdminAuthToken, testFranchise)
+      ).body;
       const deleteFranchiseRes = await request(app)
         .delete(`/api/franchise/${testFranchiseInstance.id}`)
         .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
 
       expect(deleteFranchiseRes.status).toBe(200);
-      const getUserFranchiseRes = await request(app)
+      const getUserFranchisesRes = await request(app)
         .get(`/api/franchise/${testFranchiseUserId}`)
         .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
 
-      expect(getUserFranchiseRes.status).toBe(200);
+      expect(getUserFranchisesRes.status).toBe(200);
       expect(
-        getUserFranchiseRes.body.find((f) => f.id === testFranchiseInstance.id),
+        getUserFranchisesRes.body.find(
+          (f) => f.id === testFranchiseInstance.id,
+        ),
       ).toBeUndefined();
     });
 
@@ -167,34 +153,34 @@ describe("franchiseRouter", () => {
 
   describe("createStore", () => {
     it("rejects when unauthorized", async () => {
-      await createFranchise();
+      const testFranchiseInstance = (
+        await createFranchise(testAdminAuthToken, testFranchise)
+      ).body;
 
-      const res = await request(app)
-        .post(`/api/franchise/${testFranchiseInstance.id}/store`)
-        .set({ Authorization: `Bearer ${testUserAuthToken}` })
-        .send({ name: testStoreName });
-
-      expect(res.status).toBe(403);
+      await createStore(testUserAuthToken, testFranchiseInstance, 403);
     });
 
     it("properly creates when authorized", async () => {
-      await createFranchise();
-
-      await createStore();
+      const testFranchiseInstance = (
+        await createFranchise(testAdminAuthToken, testFranchise)
+      ).body;
+      const testStoreInstance = (
+        await createStore(testFranchiseAuthtoken, testFranchiseInstance)
+      ).body;
 
       expect(testStoreInstance).toEqual(
         expect.objectContaining({
           id: expect.any(Number),
-          name: testStoreName,
+          name: testStore.name,
         }),
       );
 
       // Confirm the store appears in the franchise
-      const getRes = await request(app)
+      const getUserFranchisesRes = await request(app)
         .get(`/api/franchise/${testFranchiseUserId}`)
         .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
 
-      const franchise = getRes.body.find(
+      const franchise = getUserFranchisesRes.body.find(
         (f) => f.id === testFranchiseInstance.id,
       );
       expect(franchise).toBeDefined();
@@ -206,8 +192,12 @@ describe("franchiseRouter", () => {
 
   describe("deleteStore", () => {
     it("rejects when unauthorized", async () => {
-      await createFranchise();
-      await createStore();
+      const testFranchiseInstance = (
+        await createFranchise(testAdminAuthToken, testFranchise)
+      ).body;
+      const testStoreInstance = (
+        await createStore(testFranchiseAuthtoken, testFranchiseInstance)
+      ).body;
 
       const storeId = testStoreInstance.id;
 
@@ -217,11 +207,11 @@ describe("franchiseRouter", () => {
       expect(deleteRes.status).toBe(403);
 
       // Confirm store still exists
-      const getRes = await request(app)
+      const getUserFranchisesRes = await request(app)
         .get(`/api/franchise/${testFranchiseUserId}`)
         .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
 
-      const franchise = getRes.body.find(
+      const franchise = getUserFranchisesRes.body.find(
         (f) => f.id === testFranchiseInstance.id,
       );
       expect(franchise).toBeDefined();
@@ -229,8 +219,12 @@ describe("franchiseRouter", () => {
     });
 
     it("accepts when authorized", async () => {
-      await createFranchise();
-      await createStore();
+      const testFranchiseInstance = (
+        await createFranchise(testAdminAuthToken, testFranchise)
+      ).body;
+      const testStoreInstance = (
+        await createStore(testFranchiseAuthtoken, testFranchiseInstance)
+      ).body;
 
       const storeId = testStoreInstance.id;
       const deleteRes = await request(app)
@@ -240,11 +234,11 @@ describe("franchiseRouter", () => {
       expect(deleteRes.status).toBe(200);
 
       // Confirm store is gone
-      const getRes = await request(app)
+      const getUserFranchisesRes = await request(app)
         .get(`/api/franchise/${testFranchiseUserId}`)
         .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` });
 
-      const franchise = getRes.body.find(
+      const franchise = getUserFranchisesRes.body.find(
         (f) => f.id === testFranchiseInstance.id,
       );
       expect(franchise).toBeDefined();
