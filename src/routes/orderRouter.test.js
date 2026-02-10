@@ -4,18 +4,19 @@ const {
   makeTestUser,
   registerUser,
   getAdminToken,
-  createFranchise,
-  createStore,
-  makeTestFranchise,
+  // createFranchise,
+  // createStore,
+  // makeTestFranchise,
 } = require("./testHelpers");
 
-let testAdminAuthToken, testUserAuthToken, testFranchiseAuthtoken;
+let testAdminAuthToken, testUserAuthToken; 
+// let testFranchiseAuthtoken;
 
-const testFranchiseUser = makeTestUser();
+// const testFranchiseUser = makeTestUser();
 const testUser = makeTestUser();
 
-let testFranchiseInstance, testStoreInstance;
-let testFranchise;
+// let testFranchiseInstance, testStoreInstance;
+// let testFranchise;
 
 const testPizza = {
   title: "testPizza ",
@@ -47,15 +48,15 @@ async function addMenuItem(authToken = testAdminAuthToken, status = 200) {
 
 beforeAll(async () => {
   ({ token: testUserAuthToken } = await registerUser(testUser));
-  ({ token: testFranchiseAuthtoken } = await registerUser(testFranchiseUser));
+  // ({ token: testFranchiseAuthtoken } = await registerUser(testFranchiseUser));
   testAdminAuthToken = await getAdminToken();
-  testFranchise = makeTestFranchise(testFranchiseUser.email);
-  testFranchiseInstance = (
-    await createFranchise(testAdminAuthToken, testFranchise)
-  ).body;
-  testStoreInstance = (
-    await createStore(testFranchiseAuthtoken, testFranchiseInstance)
-  ).body;
+  // testFranchise = makeTestFranchise(testFranchiseUser.email);
+  // testFranchiseInstance = (
+  //   await createFranchise(testAdminAuthToken, testFranchise)
+  // ).body;
+  // testStoreInstance = (
+  //   await createStore(testFranchiseAuthtoken, testFranchiseInstance)
+  // ).body;
 });
 
 describe("orderRouter", () => {
