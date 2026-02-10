@@ -53,9 +53,9 @@ beforeAll(async () => {
   testFranchiseInstance = (
     await createFranchise(testAdminAuthToken, testFranchise)
   ).body;
-  testStoreInstance = (
-    await createStore(testFranchiseAuthtoken, testFranchiseInstance)
-  ).body;
+  // testStoreInstance = (
+  //   await createStore(testFranchiseAuthtoken, testFranchiseInstance)
+  // ).body;
 });
 
 describe("orderRouter", () => {
