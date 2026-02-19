@@ -113,23 +113,15 @@ class DB {
       const offset = page * pageSize;
       const usersResult = await this.query(
         connection,
-        `SELECT u.*, ur.role, ur.objectId FROM user u LEFT JOIN userRole ur ON u.id = ur.userId LIMIT ? OFFSET ?`,
-        [pageSize, offset],
+        `SELECT u.*, JSON_ARRAYAGG(ur.role) as roles FROM user u LEFT JOIN userRole ur ON u.id = ur.userId GROUP BY u.id LIMIT ? OFFSET ?`,
+        [pageSize + 1, offset],
       );
-      const userMap = {};
-      for (const row of usersResult) {
-        if (!userMap[row.id]) {
-          const { password, ...user } = row;
-          userMap[row.id] = { ...user, roles: [] };
-        }
-        if (row.role) {
-          userMap[row.id].roles.push({
-            role: row.role,
-            ...(row.objectId && { objectId: row.objectId }),
-          });
-        }
+
+      const more = usersResult.length > pageSize;
+      if (more) {
+        usersResult = usersResult.slice(0, pageSize);
       }
-      return Object.values(userMap);
+      return [usersResult.map(({ password, ...user }) => user), more];
     } finally {
       connection.end();
     }

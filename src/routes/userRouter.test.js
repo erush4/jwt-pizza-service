@@ -1,15 +1,28 @@
 const request = require("supertest");
 const app = require("../service");
-const { makeTestUser, registerUser, getAdminToken } = require("./testHelpers");
+const {
+  makeTestUser,
+  registerUser,
+  getAdminToken,
+  makeTestFranchise,
+  createFranchise,
+} = require("./testHelpers");
+const { Role } = require("../database/database");
+const config = require("../config");
 
 let testUserAuthToken, testUserId;
-let testFranchiseAuthtoken;
+let testFranchiseAuthtoken, testAdminAuthToken;
 const testFranchiseUser = makeTestUser();
 const testUser = makeTestUser();
 
 beforeAll(async () => {
   ({ token: testUserAuthToken, id: testUserId } = await registerUser(testUser));
   ({ token: testFranchiseAuthtoken } = await registerUser(testFranchiseUser));
+  testAdminAuthToken = await getAdminToken();
+  await createFranchise(
+    testAdminAuthToken,
+    makeTestFranchise(testFranchiseUser.email),
+  );
 });
 
 describe("userRouter", () => {
@@ -77,27 +90,48 @@ describe("userRouter", () => {
     // TODO: adjust to ensure emails cannot be registered to two users!!!
   });
 
-  describe("list users", () => {
-    test("list users unauthorized", async () => {
+  describe("listUsers", () => {
+    it("fails when unauthorized", async () => {
       const listUsersRes = await request(app).get("/api/user");
       expect(listUsersRes.status).toBe(401);
     });
 
-    test("list users bad auth", async () => {
+    it("fails when not admin", async () => {
       const listUsersRes = await request(app)
         .get("/api/user")
         .set("Authorization", "Bearer " + testUserAuthToken);
       expect(listUsersRes.status).toBe(403);
     });
 
-    test("list users", async () => {
-      const testAdminAuthToken = await getAdminToken();
+    it("lists all users", async () => {
       let numUsers = 3; //franchise, testdiner, admin
       const listUsersRes = await request(app)
         .get("/api/user")
         .set("Authorization", "Bearer " + testAdminAuthToken);
       expect(listUsersRes.status).toBe(200);
-      expect(listUsersRes.body.users).toHaveLength(numUsers);
+      const users = listUsersRes.body.users;
+      expect(users).toHaveLength(numUsers);
+      expect(users).toContainEqual(
+        expect.objectContaining({
+          name: testUser.name,
+          email: testUser.email,
+          roles: [Role.Diner],
+        }),
+      );
+      expect(users).toContainEqual(
+        expect.objectContaining({
+          name: testFranchiseUser.name,
+          email: testFranchiseUser.email,
+          roles: expect.arrayContaining([Role.Diner, Role.Franchisee]),
+        }),
+      );
+      expect(users).toContainEqual(
+        expect.objectContaining({
+          name: config.defaultAdmin.name,
+          email: config.defaultAdmin.email,
+          roles: [Role.Admin],
+        }),
+      );
     });
   });
 });
