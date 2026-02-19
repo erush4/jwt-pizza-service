@@ -136,15 +136,14 @@ describe("userRouter", () => {
 
     it("has valid pagination", async () => {
       const limit = 2;
-      let page = 1;
+      let page = 0;
       const listUsersRes1 = await request(app)
         .get(`/api/user?page=${page}&limit=${limit}`) 
         .set("Authorization", "Bearer " + testAdminAuthToken);
       expect(listUsersRes1.status).toBe(200);
       const users1 = listUsersRes1.body.users;
-      expect(users1).
 
-      page = 2;
+      page = 1;
       const listUsersRes2 = await request(app)
         .get(`/api/user?page=${page}&limit=${limit}`)
         .set("Authorization", "Bearer " + testAdminAuthToken);
