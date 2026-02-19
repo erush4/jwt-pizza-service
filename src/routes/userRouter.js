@@ -98,7 +98,9 @@ userRouter.get(
     if (!req.user.isRole(Role.Admin)) {
       return res.status(403).json({ message: "unauthorized" });
     }
-    res.json({ message: "not implemented", users: [], more: false });
+    const users = await DB.getUsers();
+    console.log(users);
+    res.json({ message: "not fully implemented", users: users, more: false });
   }),
 );
 

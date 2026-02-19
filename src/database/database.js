@@ -107,6 +107,34 @@ class DB {
     }
   }
 
+  async getUsers(page = 0, pageSize = 10) {
+    const connection = await this.getConnection();
+    try {
+      const offset = page * pageSize;
+      const usersResult = await this.query(
+        connection,
+        `SELECT u.*, ur.role, ur.objectId FROM user u LEFT JOIN userRole ur ON u.id = ur.userId LIMIT ? OFFSET ?`,
+        [pageSize, offset],
+      );
+      const userMap = {};
+      for (const row of usersResult) {
+        if (!userMap[row.id]) {
+          const { password, ...user } = row;
+          userMap[row.id] = { ...user, roles: [] };
+        }
+        if (row.role) {
+          userMap[row.id].roles.push({
+            role: row.role,
+            ...(row.objectId && { objectId: row.objectId }),
+          });
+        }
+      }
+      return Object.values(userMap);
+    } finally {
+      connection.end();
+    }
+  }
+
   async updateUser(userId, name, email, password) {
     const connection = await this.getConnection();
     try {
@@ -170,7 +198,7 @@ class DB {
     }
   }
 
-  async getOrders(user, page = 1) {
+  async getOrders(user, page = 0) {
     const connection = await this.getConnection();
     try {
       const offset = this.getOffset(page, config.db.listPerPage);
@@ -402,7 +430,7 @@ class DB {
   }
 
   async query(connection, sql, params) {
-    const [results] = await connection.execute(sql, params);
+    const [results] = await connection.query(sql, params);
     return results;
   }
 

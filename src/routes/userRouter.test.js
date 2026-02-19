@@ -3,7 +3,7 @@ const app = require("../service");
 const { makeTestUser, registerUser, getAdminToken } = require("./testHelpers");
 
 let testUserAuthToken, testUserId;
-let testFranchiseAuthtoken, testAdminAuthToken;
+let testFranchiseAuthtoken;
 const testFranchiseUser = makeTestUser();
 const testUser = makeTestUser();
 
@@ -92,10 +92,12 @@ describe("userRouter", () => {
 
     test("list users", async () => {
       const testAdminAuthToken = await getAdminToken();
+      let numUsers = 3; //franchise, testdiner, admin
       const listUsersRes = await request(app)
         .get("/api/user")
         .set("Authorization", "Bearer " + testAdminAuthToken);
       expect(listUsersRes.status).toBe(200);
+      expect(listUsersRes.body.users).toHaveLength(numUsers);
     });
   });
 });
