@@ -133,5 +133,25 @@ describe("userRouter", () => {
         }),
       );
     });
+
+    it("has valid pagination", async () => {
+      const limit = 2;
+      let page = 1;
+      const listUsersRes1 = await request(app)
+        .get(`/api/user?page=${page}&limit=${limit}`) 
+        .set("Authorization", "Bearer " + testAdminAuthToken);
+      expect(listUsersRes1.status).toBe(200);
+      const users1 = listUsersRes1.body.users;
+      expect(users1).
+
+      page = 2;
+      const listUsersRes2 = await request(app)
+        .get(`/api/user?page=${page}&limit=${limit}`)
+        .set("Authorization", "Bearer " + testAdminAuthToken);
+      expect(listUsersRes2.status).toBe(200);
+      const users2 = listUsersRes2.body.users;
+      expect(users2.length).toBeLessThanOrEqual(limit); //in case there are more than 3 users, thanks to testing
+      expect(users1).not.toContainEqual(users2);
+    });
   });
 });
