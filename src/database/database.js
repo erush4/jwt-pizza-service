@@ -107,21 +107,24 @@ class DB {
     }
   }
 
-  async getUsers(page = 0, pageSize = 10) {
+  async getUsers(page = 0, pageSize = 10, nameFilter = "*") {
     const connection = await this.getConnection();
     try {
       const offset = page * pageSize;
+      nameFilter = nameFilter.replace(/\*/g, "%");
       let usersResult = await this.query(
         connection,
-        `SELECT u.*, JSON_ARRAYAGG(ur.role) as roles FROM user u LEFT JOIN userRole ur ON u.id = ur.userId GROUP BY u.id LIMIT ? OFFSET ?`,
-        [pageSize, offset],
+        `SELECT u.*, JSON_ARRAYAGG(ur.role) as roles FROM user u LEFT JOIN userRole ur ON u.id = ur.userId WHERE u.name LIKE ? GROUP BY u.id LIMIT ? OFFSET ?`,
+        [nameFilter, pageSize, offset],
       );
-
       const more = usersResult.length > pageSize;
       if (more) {
         usersResult = usersResult.slice(0, pageSize);
       }
-      return [usersResult.map(({ password, ...user }) => user), more];
+      return [
+        usersResult.map(({ password: _, ...user }) => user),
+        more,
+      ];
     } catch (e) {
       console.log(e);
     } finally {
@@ -485,10 +488,26 @@ class DB {
         }
 
         if (!dbExists) {
-          this.addUser({
-            ...config.defaultAdmin,
-            roles: [{ role: Role.Admin }],
-          });
+          // LOOKS TEMPTING TO USE addUser() BUT DON'T. IT WILL CAUSE AN INFINITE LOOP WAITING FOR A CONNECTION
+          const hashedPassword = await bcrypt.hash(
+            config.defaultAdmin.password,
+            10,
+          );
+          const userResult = await this.query(
+            connection,
+            `INSERT INTO user (name, email, password) VALUES (?, ?, ?)`,
+            [
+              config.defaultAdmin.name,
+              config.defaultAdmin.email,
+              hashedPassword,
+            ],
+          );
+          const userId = userResult.insertId;
+          await this.query(
+            connection,
+            `INSERT INTO userRole (userId, role, objectId) VALUES (?, ?, ?)`,
+            [userId, Role.Admin, 0],
+          );
         }
       } finally {
         connection.end();

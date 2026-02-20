@@ -138,7 +138,7 @@ describe("userRouter", () => {
       const limit = 2;
       let page = 0;
       const listUsersRes1 = await request(app)
-        .get(`/api/user?page=${page}&limit=${limit}`) 
+        .get(`/api/user?page=${page}&limit=${limit}`)
         .set("Authorization", "Bearer " + testAdminAuthToken);
       expect(listUsersRes1.status).toBe(200);
       const users1 = listUsersRes1.body.users;
@@ -151,6 +151,25 @@ describe("userRouter", () => {
       const users2 = listUsersRes2.body.users;
       expect(users2.length).toBeLessThanOrEqual(limit); //in case there are more than 3 users, thanks to testing
       expect(users1).not.toContainEqual(users2);
+    });
+
+    it("can filter users", async () => {
+      const newUser = makeTestUser();
+      await registerUser(newUser);
+      const nameFilter = newUser.name;
+      const listUsersRes = await request(app)
+        .get(`/api/user?name=${nameFilter}`)
+        .set("Authorization", "Bearer " + testAdminAuthToken);
+      expect(listUsersRes.status).toBe(200);
+      const userlist = listUsersRes.body.users;
+      expect(userlist.length).toBe(1);
+      expect(userlist).toContainEqual(
+        expect.objectContaining({
+          name: newUser.name,
+          email: newUser.email,
+          roles: ["diner"],
+        }),
+      );
     });
   });
 });
