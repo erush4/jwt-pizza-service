@@ -83,6 +83,6 @@ describe("orderRouter", () => {
       expect(res.status).toBe(401);
     });
 
-    it("does the thing", async () => {});
+    it("does the thing", async () => {}); //TODO: make sure the order is created
   });
 });
