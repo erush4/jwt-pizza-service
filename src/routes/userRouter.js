@@ -1,5 +1,5 @@
 const express = require("express");
-const { asyncHandler } = require("../endpointHelper.js");
+const { StatusCodeError, asyncHandler } = require("../endpointHelper.js");
 const { DB, Role } = require("../database/database.js");
 const { authRouter, setAuth } = require("./authRouter.js");
 
@@ -94,7 +94,12 @@ userRouter.delete(
   "/:userId",
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
-    res.json({ message: "not implemented" });
+    if (!req.user.isRole(Role.Admin)) {
+      throw new StatusCodeError("unable to delete user", 403);
+    }
+    const userId = Number(req.params.userId);
+    await DB.deleteUser(userId);
+    res.json({ message: "user deleted" });
   }),
 );
 
@@ -107,7 +112,7 @@ userRouter.get(
       return res.status(403).json({ message: "unauthorized" });
     }
     const page = Number(req.query.page) || 0;
-    const pageSize = Number(req.query.limit) || 10 ;
+    const pageSize = Number(req.query.limit) || 10;
     const nameFilter = req.query.name || "*";
     const [users, more] = await DB.getUsers(page, pageSize, nameFilter);
     res.json({ users: users, more: more });

@@ -172,4 +172,50 @@ describe("userRouter", () => {
       );
     });
   });
+
+  describe("deleteUsers", () => {
+    const deleteUser = makeTestUser();
+    let deleteUserId, deleteUserToken;
+    beforeEach(async () => {
+      ({ token: deleteUserToken, id: deleteUserId } =
+        await registerUser(deleteUser));
+    });
+
+    afterEach(async () => {
+      const deleteRes = await request(app)
+        .delete(`/api/user/${deleteUserId}`)
+        .set("Authorization", "Bearer " + testAdminAuthToken);
+      expect(deleteRes.status).toBe(200);
+    });
+
+    it("fails when unauthorized", async () => {
+      const deleteRes = await request(app).delete(`/api/user/${deleteUserId}`);
+      expect(deleteRes.status).toBe(401);
+    });
+
+    it("fails when not admin", async () => {
+      const deleteRes = await request(app)
+        .delete(`/api/user/${deleteUserId}`)
+        .set("Authorization", "Bearer " + testUserAuthToken);
+      expect(deleteRes.status).toBe(403);
+    });
+
+    it("properly deletes user", async () => {
+      console.log(deleteUserId);
+      const deleteRes = await request(app)
+        .delete(`/api/user/${deleteUserId}`)
+        .set("Authorization", "Bearer " + testAdminAuthToken);
+      expect(deleteRes.status).toBe(200);
+
+      //ensure login fails
+      const loginRes = await request(app).put("/api/auth").send(deleteUser);
+      expect(loginRes.status).toBe(401);
+
+      //ensure token is deleted as well
+      const orderRes = await request(app)
+        .post("/api/order")
+        .set("Authorization", "Bearer " + deleteUserToken);
+      expect(orderRes.status).toBe(401);
+    });
+  });
 });
