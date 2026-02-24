@@ -1,6 +1,7 @@
 const request = require("supertest");
 const app = require("./service");
-const config = require("./config.js")
+jest.mock("./oldconfig.js")
+const config = require("./oldconfig.js")
 const testUser = {
   name: "pizza diner",
   email: "reg@test.com",

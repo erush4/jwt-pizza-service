@@ -443,7 +443,7 @@ class DB {
       try {
         const dbExists = await this.checkDatabaseExists(connection);
         console.log(
-          dbExists ? "Database exists" : "Database does not exist, creating it",
+          dbExists ? `Database ${config.db.connection.database} exists` : `Database ${config.db.connection.database} does not exist, creating it`,
         );
 
         await connection.query(
