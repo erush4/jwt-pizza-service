@@ -16,7 +16,6 @@ jobs:
         image: mysql:8.0.29
         env:
           MYSQL_ROOT_PASSWORD: tempdbpassword
-          MYSQL_DATABASE: pizza
         ports:
           - "3306:3306"
         options: >-
@@ -39,14 +38,16 @@ jobs:
 
       - name: Write config file
         run: |
-          echo "module.exports = {
+          echo "const { Role } = require('./model/model');
+          module.exports = {
             jwtSecret: '${{ secrets.JWT_SECRET }}',
             db: {
               connection: {
                 host: '127.0.0.1',
                 user: 'root',
                 password: 'tempdbpassword',
-                database: 'pizza',
+                 database: process.env.TEST_DB_NAME || 'pizza',
+
                 connectTimeout: 60000,
               },
               listPerPage: 10,
@@ -54,6 +55,22 @@ jobs:
             factory: {
               url: 'https://pizza-factory.cs329.click',
               apiKey: '${{ secrets.FACTORY_API_KEY }}',
+            },
+            defaultAdmin: {
+              name: '${{ secrets.ADMIN_NAME }}',
+              email: '${{ secrets.ADMIN_EMAIL }}',
+              password: '${{ secrets.ADMIN_PASSWORD }}',
+              roles: [{ role: Role.Admin }],
+            },
+            testUsers: {
+              diner: {
+                email: 'testd@jwt.com',
+                password: 'testdiner',
+              },
+              franchisee: {
+                email:'testf@jwt.com',
+                password: 'testfranchisee',
+              },
             },
           };" > src/config.js
 

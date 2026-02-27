@@ -76,6 +76,23 @@ class DB {
     }
   }
 
+  async deleteUser(userId) {
+    const connection = await this.getConnection();
+    try {
+      await this.query(connection, `DELETE FROM userRole WHERE userId=?`, [
+        userId,
+      ]);
+      await this.query(connection, `DELETE FROM user WHERE id=?`, [userId]);
+      await this.query(connection, `DELETE FROM auth WHERE userId=?`, [userId]);
+      return;
+    } catch (e) {
+      console.log(e);
+      throw e;
+    } finally {
+      connection.end();
+    }
+  }
+
   async getUser(email, password) {
     const connection = await this.getConnection();
     try {
@@ -89,7 +106,7 @@ class DB {
         !user ||
         (password && !(await bcrypt.compare(password, user.password)))
       ) {
-        throw new StatusCodeError("unknown user", 404);
+        throw new StatusCodeError("unauthorized", 401);
       }
 
       const roleResult = await this.query(
@@ -102,6 +119,26 @@ class DB {
       });
 
       return { ...user, roles: roles, password: undefined };
+    } finally {
+      connection.end();
+    }
+  }
+
+  async getUsers(page = 0, pageSize = 10, nameFilter = "*") {
+    const connection = await this.getConnection();
+    try {
+      const offset = page * pageSize;
+      nameFilter = nameFilter.replace(/\*/g, "%");
+      let usersResult = await this.query(
+        connection,
+        `SELECT u.*, JSON_ARRAYAGG(ur.role) as roles FROM user u LEFT JOIN userRole ur ON u.id = ur.userId WHERE u.name LIKE ? GROUP BY u.id LIMIT ? OFFSET ?`,
+        [nameFilter, pageSize, offset],
+      );
+      const more = usersResult.length > pageSize;
+      if (more) {
+        usersResult = usersResult.slice(0, pageSize);
+      }
+      return [usersResult.map(({ password: _, ...user }) => user), more];
     } finally {
       connection.end();
     }
@@ -170,7 +207,7 @@ class DB {
     }
   }
 
-  async getOrders(user, page = 1) {
+  async getOrders(user, page = 0) {
     const connection = await this.getConnection();
     try {
       const offset = this.getOffset(page, config.db.listPerPage);
@@ -402,7 +439,7 @@ class DB {
   }
 
   async query(connection, sql, params) {
-    const [results] = await connection.execute(sql, params);
+    const [results] = await connection.query(sql, params);
     return results;
   }
 
@@ -443,7 +480,10 @@ class DB {
       try {
         const dbExists = await this.checkDatabaseExists(connection);
         console.log(
-          dbExists ? `Database ${config.db.connection.database} exists` : `Database ${config.db.connection.database} does not exist, creating it`,
+          (dbExists
+            ? `Database ${config.db.connection.database} exists`
+            : `Database does not exist, creating ${config.db.connection.database}`) +
+            ` at ${config.db.connection.host}`,
         );
 
         await connection.query(
@@ -460,10 +500,26 @@ class DB {
         }
 
         if (!dbExists) {
-          this.addUser({
-            ...config.defaultAdmin,
-            roles: [{ role: Role.Admin }],
-          });
+          // LOOKS TEMPTING TO USE addUser() BUT DON'T. IT WILL CAUSE AN INFINITE LOOP WAITING FOR A CONNECTION
+          const hashedPassword = await bcrypt.hash(
+            config.defaultAdmin.password,
+            10,
+          );
+          const userResult = await this.query(
+            connection,
+            `INSERT INTO user (name, email, password) VALUES (?, ?, ?)`,
+            [
+              config.defaultAdmin.name,
+              config.defaultAdmin.email,
+              hashedPassword,
+            ],
+          );
+          const userId = userResult.insertId;
+          await this.query(
+            connection,
+            `INSERT INTO userRole (userId, role, objectId) VALUES (?, ?, ?)`,
+            [userId, Role.Admin, 0],
+          );
         }
       } finally {
         connection.end();
@@ -480,6 +536,9 @@ class DB {
   }
 
   async checkDatabaseExists(connection) {
+    console.log(
+      `Checking if database ${config.db.connection.database} exists...`,
+    );
     const [rows] = await connection.execute(
       `SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?`,
       [config.db.connection.database],

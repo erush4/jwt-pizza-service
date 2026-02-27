@@ -5,3 +5,6 @@ config.js
 coverage
 dist
 oldconfig.js
+__mocks__
+
+oldconfig.js
