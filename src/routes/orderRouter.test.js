@@ -9,7 +9,7 @@ const {
   // makeTestFranchise,
 } = require("./testHelpers");
 
-let testAdminAuthToken, testUserAuthToken; 
+let testAdminAuthToken, testUserAuthToken;
 // let testFranchiseAuthtoken;
 
 // const testFranchiseUser = makeTestUser();
@@ -37,12 +37,14 @@ const testOrder = {
 };
 
 async function addMenuItem(authToken = testAdminAuthToken, status = 200) {
-  await request(app)
+  const putItemRes = await request(app)
     .put("/api/order/menu")
     .set({ Authorization: `Bearer ${authToken}` })
     .send(getTestPizza());
+  expect(putItemRes.status).toBe(status);
+  if (status !== 200) return;
   const getMenuRes = await request(app).get("/api/order/menu");
-  expect(getMenuRes.status).toBe(status);
+  expect(getMenuRes.status).toBe(200);
   return getMenuRes;
 }
 

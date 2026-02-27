@@ -1,16 +1,12 @@
-const fs = require("fs");
-const path = require("path");
+const config = require("./src/config");
+const mysql = require("mysql2/promise");
 
-const worker = process.env.JEST_WORKER_ID || "0";
-const dbName = `test_db_${worker}_${Date.now()}`;
+const dbName = process.env.TEST_DB_NAME;
+afterAll(async () => {
+  const { host, user, password } = config.db.connection;
+  const connection = await mysql.createConnection({ host, user, password });
+  await connection.query(`DROP DATABASE IF EXISTS \`${dbName}\``);
+  await connection.end();
 
-//create files pointing to database
-const infoPath = path.join(__dirname, `test-db-info-${worker}.json`);
-
-fs.writeFileSync(
-  infoPath,
-  JSON.stringify({ database: dbName }, null, 2),
-  "utf8",
-);
-
-process.env.TEST_DB_NAME = dbName;
+  console.log(`Dropped test database: ${dbName}`);
+});
