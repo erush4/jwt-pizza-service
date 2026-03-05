@@ -6,6 +6,14 @@ if [ -z "$1" ]; then
 fi
 host=$1
 
+CONFIG=$(node print-config.js)
+ADMIN_EMAIL=$(echo $CONFIG | jq -r '.adminEmail')
+ADMIN_PASSWORD=$(echo $CONFIG | jq -r '.adminPassword')
+DINER_EMAIL=$(echo $CONFIG | jq -r '.dinerEmail')
+DINER_PASSWORD=$(echo $CONFIG | jq -r '.dinerPassword')
+FRANCHISE_EMAIL=$(echo $CONFIG | jq -r '.franchiseEmail')
+FRANCHISE_PASSWORD=$(echo $CONFIG | jq -r '.franchisePassword')
+
 response=$(curl -s -X PUT $host/api/auth -H 'Content-Type: application/json' -d "{\"email\":\"$ADMIN_EMAIL\", \"password\":\"$ADMIN_PASSWORD\"}")
 token=$(echo $response | jq -r '.token')
 
