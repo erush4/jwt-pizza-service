@@ -16,18 +16,18 @@ function getMemoryUsagePercentage() {
 
 // Metrics stored in memory
 const requests = {};
-let period_latency = 0;
-let period_requests = 0;
+let service_latency = 0;
+let service_requests = 0;
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
     const startTime = Date.now();
-    const endpoint = `[${req.method}] ${req.path}`;
-    requests[endpoint] = (requests[endpoint] || 0) + 1;
+    const method = `${req.method}`;
+    requests[method] = (requests[method] || 0) + 1;
     requests['total']++;
     res.on('finish', () => {
-        period_latency += (Date.now() - startTime);
-        period_requests++;
+        period_latency['service'] += (Date.now() - startTime);
+        period_requests['service'++;
     })
     next();
 }
@@ -57,7 +57,7 @@ function createMetric(metricName, metricValue, metricUnit, metricType, valueType
     return metric;
 }
 
-function sendMetricToGrafana(metrics) {
+function sendMetricsToGrafana(metrics) {
     const body = {
         resourceMetrics: [{
             scopeMetrics: [{
@@ -82,17 +82,30 @@ function sendMetricToGrafana(metrics) {
         });
 }
 
+
 function sendMetricsPeriodically(period) {
-    const timer = setInterval(() => {
+    setInterval(() => {
         try {
-            const metrics = new OtelMetricBuilder();
-            metrics.add(httpMetrics);
-            metrics.add(systemMetrics);
+            const metrics = [];
+            //http method metrics
+            Object.keys(requests).forEach((method) => {
+                metrics.push(createMetric('requests', requests[method], '1', 'sum', 'asInt', {method}));
+            });
+            const service_latency = service_latency / service_requests;
+            metrics.push(createMetric('latency'), service_latency, 'ms', gauge)
+
+            //system metrics
+            metrics.push(createMetric('hardware_use', getCpuUsagePercentage(), '%', 'gauge', 'asDouble', {component: 'cpu'}));
+            metrics.push(createMetric('hardware_use', getMemoryUsagePercentage(), '%', 'gauge', 'asDouble', {component: 'memory'}));
+
+            // user metrics
             metrics.add(userMetrics);
             metrics.add(purchaseMetrics);
             metrics.add(authMetrics);
 
-            metrics.sendToGrafana();
+            //pizza metrics
+
+            sendMetricsToGrafana(metrics);
         } catch (error) {
             console.log('Error sending metrics', error);
         }
