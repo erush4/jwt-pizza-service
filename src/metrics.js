@@ -18,6 +18,13 @@ function getMemoryUsagePercentage() {
 const requests = {};
 let service_latency = 0;
 let service_requests = 0;
+let pizza_latency = 0;
+let pizzas_purchased = 0;
+let pizza_fails = 0;
+let pizza_period_purchase = 0;
+let pizza_revenue = 0;
+let successful_logins = 0;
+let failed_logins = 0;
 let active_users = {}
 
 function addActiveUser(userId) {
@@ -28,6 +35,17 @@ function removeActiveUser(userId) {
     active_users[userId] = (active_users[userId] || 0) - 1;
     if (active_users[userId] <= 0) {
         delete active_users[userId];
+    }
+}
+
+function addPizzaPurchase(failed, latency, revenue) {
+    if (failed) {
+        pizza_fails += 1
+    } else {
+        pizza_latency += latency;
+        pizzas_purchased += 1;
+        pizza_period_purchase += 1;
+        pizza_revenue += revenue;
     }
 }
 
@@ -106,7 +124,7 @@ function sendMetricsPeriodically(period) {
             const http_latency = service_latency / service_requests;
             service_latency = 0;
             service_requests = 0;
-            metrics.push(createMetric('latency'), http_latency, 'ms', 'gauge', 'asDouble', {type: "service"});
+            metrics.push(createMetric('latency'), http_latency, 'ms', 'gauge', 'asDouble', {type: "request"});
 
             //system metrics
             metrics.push(createMetric('hardware_use', getCpuUsagePercentage(), '%', 'gauge', 'asDouble', {component: 'cpu'}));
@@ -115,10 +133,17 @@ function sendMetricsPeriodically(period) {
             // user metrics
             metrics.push(createMetric('active_users', Object.keys(active_users).length, '1', 'gauge', 'asInt', {}));
 
-            metrics.add(purchaseMetrics);
-            metrics.add(authMetrics);
-
             //pizza metrics
+            const factory_latency = pizza_latency / pizza_period_purchase;
+            pizza_latency = 0;
+            pizza_period_purchase = 0;
+            metrics.push(createMetric('latency', factory_latency, 'ms', 'gauge', 'asDouble', {type: "pizza"}));
+            metrics.push(createMetric('pizza_purchase', pizzas_purchased, '1', 'sum', 'asInt', {type: "pizzas_bought"}));
+            metrics.push(createMetric('pizza_purchase', pizza_revenue, '$', 'sum', 'asDouble', {type: "pizza_revenue"}));
+            metrics.push(createMetric('pizza_purchase', pizza_fails, '1', 'sum', 'asInt', {type: 'pizza_fails'}));
+
+            //auth metrics
+            metrics.add(authMetrics);
 
             sendMetricsToGrafana(metrics);
         } catch (error) {
