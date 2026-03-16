@@ -18,6 +18,18 @@ function getMemoryUsagePercentage() {
 const requests = {};
 let service_latency = 0;
 let service_requests = 0;
+let active_users = {}
+
+function addActiveUser(userId) {
+    active_users[userId] = (active_users[userId] || 0) + 1;
+}
+
+function removeActiveUser(userId) {
+    active_users[userId] = (active_users[userId] || 0) - 1;
+    if (active_users[userId] <= 0) {
+        delete active_users[userId];
+    }
+}
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
@@ -26,8 +38,8 @@ function requestTracker(req, res, next) {
     requests[method] = (requests[method] || 0) + 1;
     requests['total']++;
     res.on('finish', () => {
-        period_latency['service'] += (Date.now() - startTime);
-        period_requests['service'++;
+        service_latency += (Date.now() - startTime);
+        service_requests += 1;
     })
     next();
 }
@@ -89,17 +101,20 @@ function sendMetricsPeriodically(period) {
             const metrics = [];
             //http method metrics
             Object.keys(requests).forEach((method) => {
-                metrics.push(createMetric('requests', requests[method], '1', 'sum', 'asInt', {method}));
+                metrics.push(createMetric('requests', requests[method], '1', 'sum', 'asInt', {method: method}));
             });
-            const service_latency = service_latency / service_requests;
-            metrics.push(createMetric('latency'), service_latency, 'ms', gauge)
+            const http_latency = service_latency / service_requests;
+            service_latency = 0;
+            service_requests = 0;
+            metrics.push(createMetric('latency'), http_latency, 'ms', 'gauge', 'asDouble', {type: "service"});
 
             //system metrics
             metrics.push(createMetric('hardware_use', getCpuUsagePercentage(), '%', 'gauge', 'asDouble', {component: 'cpu'}));
             metrics.push(createMetric('hardware_use', getMemoryUsagePercentage(), '%', 'gauge', 'asDouble', {component: 'memory'}));
 
             // user metrics
-            metrics.add(userMetrics);
+            metrics.push(createMetric('active_users', Object.keys(active_users).length, '1', 'gauge', 'asInt', {}));
+
             metrics.add(purchaseMetrics);
             metrics.add(authMetrics);
 
