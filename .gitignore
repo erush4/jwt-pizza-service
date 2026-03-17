@@ -6,4 +6,4 @@ coverage
 dist
 oldconfig.js
 __mocks__
-
+/.idea/
