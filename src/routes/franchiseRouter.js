@@ -76,7 +76,7 @@ franchiseRouter.docs = [
     response: { message: "store deleted" },
   },
 ];
-
+franchiseRouter.use(requestTracker);
 // getFranchises
 franchiseRouter.get(
   "/",
@@ -91,6 +91,7 @@ franchiseRouter.get(
   }),
 );
 franchiseRouter.use(requestTracker);
+
 
 // getUserFranchises
 franchiseRouter.get(

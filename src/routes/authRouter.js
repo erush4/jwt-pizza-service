@@ -47,6 +47,9 @@ authRouter.docs = [
     response: { message: "logout successful" },
   },
 ];
+
+authRouter.use(requestTracker);
+
 async function setAuthUser(req, res, next) {
   const token = readAuthToken(req);
   if (token) {
@@ -64,7 +67,7 @@ async function setAuthUser(req, res, next) {
   next();
 }
 
-authRouter.use(requestTracker);
+
 // Authenticate token
 authRouter.authenticateToken = (req, res, next) => {
   if (!req.user) {
