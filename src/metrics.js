@@ -1,6 +1,19 @@
 const config = require('./config');
 const os = require('os');
 
+// Metrics stored in memory
+const requests = {};
+let service_latency = 0;
+let service_requests = 0;
+let pizza_latency = 0;
+let pizzas_purchased = 0;
+let pizza_fails = 0;
+let pizza_period_purchase = 0;
+let pizza_revenue = 0;
+let successful_logins = 0;
+let failed_logins = 0;
+let active_users = {}
+
 function getCpuUsagePercentage() {
     const cpuUsage = os.loadavg()[0] / os.cpus().length;
     return cpuUsage.toFixed(2) * 100;
@@ -14,18 +27,6 @@ function getMemoryUsagePercentage() {
     return memoryUsage.toFixed(2);
 }
 
-// Metrics stored in memory
-const requests = {};
-let service_latency = 0;
-let service_requests = 0;
-let pizza_latency = 0;
-let pizzas_purchased = 0;
-let pizza_fails = 0;
-let pizza_period_purchase = 0;
-let pizza_revenue = 0;
-let successful_logins = 0;
-let failed_logins = 0;
-let active_users = {}
 
 function addActiveUser(userId) {
     active_users[userId] = (active_users[userId] || 0) + 1;
