@@ -90,7 +90,6 @@ franchiseRouter.get(
     res.json({ franchises, more });
   }),
 );
-franchiseRouter.use(requestTracker);
 
 
 // getUserFranchises
