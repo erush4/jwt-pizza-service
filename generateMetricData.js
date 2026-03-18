@@ -11,8 +11,7 @@ let users = [
     {name: "user3", email: "user3@test.com", password: "pass3"}
 ];
 
-async function loginUser() {
-    const user = users[Math.floor(Math.random() * users.length)];
+async function loginUser(user) {
     const res = await fetch(BASE_URL + '/auth', {
         method: 'PUT',
         headers: {
@@ -22,6 +21,11 @@ async function loginUser() {
     });
     const data = await res.json();
     return data.token;
+}
+
+async function login() {
+    const user = users[Math.floor(Math.random() * users.length)];
+    loginUser(user);
 }
 
 async function getMenu(token) {
@@ -127,7 +131,7 @@ async function registerNewUser() {
 
 const loggedOutActions = [
     {weight: 50, fn: async () => Promise.resolve()},
-    {weight: 50, fn: async () => loginUser()},
+    {weight: 50, fn: async () => login()},
     {weight: 5, fn: async () => registerNewUser()},
     {weight: 1, fn: async () => badLogin()}
 ]
@@ -159,6 +163,10 @@ async function simulateDiner() {
 }
 
 async function main() {
+    for (let i = 0; i < users.length; i += 1) {
+        const token = await loginUser(users[i]);
+        await logout(token);
+    }
     await getMenu(undefined);
     await Promise.all([simulateDiner(), simulateDiner(), simulateDiner(), simulateDiner(), simulateDiner(), simulateDiner(),])
     return 0;
