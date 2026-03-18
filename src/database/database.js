@@ -12,8 +12,8 @@ class DB {
   async getMenu() {
     const connection = await this.getConnection();
     try {
-      const rows = await this.query(connection, `SELECT * FROM menu`);
-      return rows;
+      return await this.query(connection, `SELECT *
+                                           FROM menu`);
     } finally {
       connection.end();
     }
@@ -84,10 +84,6 @@ class DB {
       ]);
       await this.query(connection, `DELETE FROM user WHERE id=?`, [userId]);
       await this.query(connection, `DELETE FROM auth WHERE userId=?`, [userId]);
-      return;
-    } catch (e) {
-      console.log(e);
-      throw e;
     } finally {
       connection.end();
     }
@@ -228,12 +224,11 @@ class DB {
         [user.id],
       );
       for (const order of orders) {
-        let items = await this.query(
+        order.items = await this.query(
           connection,
           `SELECT id, menuId, description, price FROM orderItem WHERE orderId=?`,
           [order.id],
         );
-        order.items = items;
       }
       return { dinerId: user.id, orders: orders, page };
     } finally {
@@ -273,7 +268,7 @@ class DB {
           `SELECT id, name FROM user WHERE email=?`,
           [admin.email],
         );
-        if (adminUser.length == 0) {
+        if (adminUser.length === 0) {
           throw new StatusCodeError(
             `unknown user for franchise admin ${admin.email} provided`,
             404,
