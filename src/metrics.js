@@ -134,11 +134,12 @@ function sendMetricsPeriodically(period) {
             Object.keys(requests).forEach((method) => {
                 metrics.push(createMetric('requests', requests[method], '1', 'sum', 'asInt', {method: method}));
             });
-            const http_latency = service_requests === 0 ? 0 : service_latency / service_requests;
-            service_latency = 0;
-            service_requests = 0;
-            metrics.push(createMetric('latency', http_latency, 'ms', 'gauge', 'asDouble', {type: "request"}));
-
+            if (service_requests > 0) {
+                const http_latency = service_latency / service_requests;
+                service_latency = 0;
+                service_requests = 0;
+                metrics.push(createMetric('latency', http_latency, 'ms', 'gauge', 'asDouble', {type: "request"}));
+            }
             //system metrics
             metrics.push(createMetric('hardware_use', getCpuUsagePercentage(), '%', 'gauge', 'asDouble', {component: 'cpu'}));
             metrics.push(createMetric('hardware_use', getMemoryUsagePercentage(), '%', 'gauge', 'asDouble', {component: 'memory'}));
@@ -147,10 +148,12 @@ function sendMetricsPeriodically(period) {
             metrics.push(createMetric('active_users', Object.keys(active_users).length, '1', 'gauge', 'asInt', {}));
 
             //pizza metrics
-            const factory_latency = pizza_period_purchase === 0 ? 0 : pizza_latency / pizza_period_purchase;
-            pizza_latency = 0;
-            pizza_period_purchase = 0;
-            metrics.push(createMetric('latency', factory_latency, 'ms', 'gauge', 'asDouble', {type: "pizza"}));
+            if (pizza_period_purchase > 0) {
+                const factory_latency = pizza_period_purchase === 0 ? 0 : pizza_latency / pizza_period_purchase;
+                pizza_latency = 0;
+                pizza_period_purchase = 0;
+                metrics.push(createMetric('latency', factory_latency, 'ms', 'gauge', 'asDouble', {type: "pizza"}));
+            }
             metrics.push(createMetric('pizza_purchase', pizzas_purchased, '1', 'sum', 'asInt', {type: "pizzas_bought"}));
             metrics.push(createMetric('pizza_purchase', pizza_revenue, '$', 'sum', 'asDouble', {type: "pizza_revenue"}));
             metrics.push(createMetric('pizza_purchase', pizza_fails, '1', 'sum', 'asInt', {type: 'pizza_fails'}));
