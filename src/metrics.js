@@ -48,7 +48,7 @@ function addPizzaPurchase(failed, latency, items) {
             pizza_revenue += items[i].price
         }
     }
-    pizza_period_purchase += 1;
+    pizza_period_purchase += items.length;
     pizza_latency += latency;
 }
 
