@@ -39,12 +39,13 @@ describe("userRouter", () => {
   });
 
   describe("updateUser", () => {
+    const updatedUser = {
+      name: "new Name",
+      email: testUser.email,
+      password: "a",
+    };
     it("properly updates the user", async () => {
-      const updatedUser = {
-        name: "new Name",
-        email: testUser.email,
-        password: "a",
-      };
+
       const updateUserRes = await request(app)
         .put(`/api/user/${testUserId}`)
         .set({ Authorization: `Bearer ${testUserAuthToken}` })
@@ -68,11 +69,6 @@ describe("userRouter", () => {
     });
 
     it("fails when not user or admin", async () => {
-      const updatedUser = {
-        name: "new Name",
-        email: testUser.email,
-        password: "a",
-      };
       const updateUserRes = await request(app)
         .put(`/api/user/${testUserId}`)
         .set({ Authorization: `Bearer ${testFranchiseAuthtoken}` })
@@ -86,7 +82,6 @@ describe("userRouter", () => {
 
       expect(getUserRes.body.name).toBe(testUser.name);
     });
-
     // TODO: adjust to ensure emails cannot be registered to two users!!!
   });
 
