@@ -6,10 +6,25 @@ const franchiseId = 1;
 const storeId = 1;
 
 let users = [
-    {name: "user1", email: "user1@test.com", password: "pass1"},
-    {name: "user2", email: "user2@test.com", password: "pass2"},
-    {name: "user3", email: "user3@test.com", password: "pass3"}
+    {name: "metrics1", email: "metrics1@test.com", password: "pass1"},
+    {name: "metrics2", email: "metrics2@test.com", password: "pass2"},
+    {name: "metrics3", email: "metrics3@test.com", password: "pass3"}
 ];
+
+async function registerUser(user) {
+    const res = await fetch(BASE_URL + '/auth', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(user),
+    });
+    const data = await res.json();
+    if (res.status !== 200) {
+        throw new Error("registerUser failed: " + res.status);
+    }
+    return data.token;
+}
 
 async function loginUser(user) {
     const res = await fetch(BASE_URL + '/auth', {
@@ -20,17 +35,23 @@ async function loginUser(user) {
         body: JSON.stringify({email: user.email, password: user.password}),
     });
     const data = await res.json();
+    if (res.status !== 200) {
+        throw new Error("loginUser failed: " + res.status);
+    }
     return data.token;
 }
 
 async function login() {
     const user = users[Math.floor(Math.random() * users.length)];
-    loginUser(user);
+    await loginUser(user);
 }
 
 async function getMenu(token) {
     const res = await fetch(BASE_URL + '/order/menu');
     menu = await res.json();
+    if (res.status !== 200) {
+        console.error("getMenu failed")
+    }
     return token;
 }
 
@@ -42,6 +63,9 @@ async function badLogin() {
         },
         body: JSON.stringify({email: 'bad@test.com', password: 'wrongpassword'}),
     });
+    if (res.status === 200) {
+        throw new Error("badLogin succeeded");
+    }
     await res.json();
     return undefined;
 }
@@ -53,6 +77,9 @@ async function logout(token) {
             'Authorization': `Bearer ${token}`,
         },
     });
+    if (res.status !== 200) {
+        throw new Error("logout failed");
+    }
     await res.json();
     return undefined;
 }
@@ -82,6 +109,9 @@ async function orderPizza(token) {
             'Content-Type': 'application/json', Authorization: `Bearer ${token}`
         }, body: JSON.stringify(buildOrder(numItems))
     });
+    if (res.status !== 200) {
+        throw new Error("pizza order failed");
+    }
     await res.json();
     return token;
 }
@@ -96,6 +126,9 @@ async function makeBadOrder(token) {
             'Content-Type': 'application/json', Authorization: `Bearer ${token}`
         }, body: JSON.stringify(buildOrder(numItems))
     });
+    if (res.status === 200) {
+        console.error("pizza order succeeded");
+    }
     await res.json();
     return token;
 }
@@ -151,7 +184,7 @@ async function simulateDiner() {
     let token = undefined
     while (Date.now() < endTime) {
         let action;
-        if (token) {
+        if (token !== undefined && token !== null) {
             action = getRandomAction(loggedInDinerActions);
         } else {
             action = getRandomAction(loggedOutActions);
@@ -164,7 +197,17 @@ async function simulateDiner() {
 
 async function main() {
     for (let i = 0; i < users.length; i += 1) {
-        const token = await loginUser(users[i]);
+        let token;
+        try {
+            token = await loginUser(users[i]);
+        } catch (e) {
+            if (e.message === "loginUser failed: 401") {
+                token = await registerUser(users[i]);
+            } else {
+                console.error(e)
+                throw e;
+            }
+        }
         await logout(token);
     }
     await getMenu(undefined);
