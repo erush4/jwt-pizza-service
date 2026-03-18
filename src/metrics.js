@@ -8,7 +8,7 @@ let service_requests = 0;
 let pizza_latency = 0;
 let pizzas_purchased = 0;
 let pizza_fails = 0;
-let pizza_period_purchase = 0;
+let pizza_period_requests = 0;
 let pizza_revenue = 0;
 let successful_logins = 0;
 let failed_logins = 0;
@@ -48,7 +48,7 @@ function addPizzaPurchase(failed, latency, items) {
         }
         pizzas_purchased += items.length
     }
-    pizza_period_purchase += items.length;
+    pizza_period_requests += 1
     pizza_latency += latency;
 }
 
@@ -148,10 +148,10 @@ function sendMetricsPeriodically(period) {
             metrics.push(createMetric('active_users', Object.keys(active_users).length, '1', 'gauge', 'asInt', {}));
 
             //pizza metrics
-            if (pizza_period_purchase > 0) {
-                const factory_latency = pizza_period_purchase === 0 ? 0 : pizza_latency / pizza_period_purchase;
+            if (pizza_period_requests > 0) {
+                const factory_latency = pizza_latency / pizza_period_requests;
                 pizza_latency = 0;
-                pizza_period_purchase = 0;
+                pizza_period_requests = 0;
                 metrics.push(createMetric('latency', factory_latency, 'ms', 'gauge', 'asDouble', {type: "pizza"}));
             }
             metrics.push(createMetric('pizza_purchase', pizzas_purchased, '1', 'sum', 'asInt', {type: "pizzas_bought"}));
