@@ -39,9 +39,11 @@ const testOrder = {
 async function addMenuItem(authToken = testAdminAuthToken, status = 200) {
   const putItemRes = await request(app)
     .put("/api/order/menu")
-    .set({ Authorization: `Bearer ${authToken}` })
+    .set({Authorization: `Bearer ${authToken}`})
     .send(getTestPizza());
-  expect(putItemRes.status).toBe(status);
+  if (putItemRes.status !== status) {
+    throw new Error(`status ${putItemRes.status} did not match expected status ${status}.\nResponse Body: ${putItemRes.body}`);
+  }
   if (status !== 200) return;
   const getMenuRes = await request(app).get("/api/order/menu");
   expect(getMenuRes.status).toBe(200);
@@ -74,7 +76,7 @@ describe("orderRouter", () => {
   });
 
   describe("addMenuItem", () => {
-    it("rejects when user is unauthorized", async () => {
+    it("rejects when user is not allowed", async () => {
       addMenuItem(testUserAuthToken, 403);
     });
   });
