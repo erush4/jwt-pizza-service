@@ -1,4 +1,6 @@
-const BASE_URL = "http://localhost:3000/api"; //config.deploymentUrl + "/api";
+const config = require("./src/config");
+
+const BASE_URL = config.deploymentUrl + "/api";
 
 let menu = []
 const franchiseId = 1;
