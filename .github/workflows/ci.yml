@@ -63,6 +63,17 @@ jobs:
               password: '${{ secrets.ADMIN_PASSWORD }}',
               roles: [{ role: Role.Admin }],
             },
+            testUsers: {
+              diner: { 
+                name: '${{ secrets.DINER_NAME }}',
+                email: '${{ secrets.DINER_EMAIL }}',
+                password: '${{ secrets.DINER_PASSWORD }}',
+              },
+              franchisee: {
+                name: '${{ secrets.FRANCHISEE_NAME }}',
+                email: '${{ secrets.FRANCHISEE_EMAIL }}',
+                password: '${{ secrets.FRANCHISEE_PASSWORD }}',
+            },
             metrics: {
               source: 'jwt-pizza-service',
               endpointUrl: '${{ secrets.METRICS_ENDPOINT_URL }}',
