@@ -50,9 +50,9 @@ function addLoginMetric(failed) {
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
-    // if (req.method === 'OPTIONS' || req.method === 'HEAD') {
-    //     return next();
-    // }
+    if (req.method === 'OPTIONS' || req.method === 'HEAD' || req.originalUrl.includes('/docs')) {
+        return next();
+    }
     const startTime = Date.now();
     res.on('finish', () => {
         const route = (req.baseUrl + (req.route?.path || ''))

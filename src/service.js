@@ -45,7 +45,7 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use("*", requestTracker, (req, res) => {
+app.use("*", (req, res) => {
   res.status(404).json({
     message: "unknown endpoint",
   });
