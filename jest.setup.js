@@ -1,6 +1,13 @@
 const config = require("./src/config");
 const mysql = require("mysql2/promise");
 
+
+jest.mock('./src/logger', () => ({
+  httpLogger: (req, res, next) => next(), dbLogger: () => {
+  }, factoryLogger: () => {
+  }, unhandledErrorLogger: () => {
+  },
+}));
 const dbName = process.env.TEST_DB_NAME;
 afterAll(async () => {
   const { host, user, password } = config.db.connection;

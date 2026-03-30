@@ -4,6 +4,7 @@ const config = require("../config.js");
 const {StatusCodeError} = require("../endpointHelper.js");
 const {Role} = require("../model/model.js");
 const dbModel = require("./dbModel.js");
+const {dbLogger} = require("../logger");
 
 class DB {
     constructor() {
@@ -13,11 +14,10 @@ class DB {
     async getNumActiveUsers() {
         const connection = await this.getConnection();
         try {
-            const authResult = await this.query(connection, `SELECT COUNT(DISTINCT userId) as count
-                                                             FROM auth
-                                                             WHERE lastActiveTime > DATE_SUB(NOW(), INTERVAL ? MINUTE)`,
-                [config.authTimeoutValue],);
-            return authResult[0].count
+            const [authResult] = await connection.query(`SELECT COUNT(DISTINCT userId) as count
+                                                         FROM auth
+                                                         WHERE lastActiveTime > DATE_SUB(NOW(), INTERVAL ? MINUTE)`, [config.authTimeoutValue]);
+            return authResult.count
         } finally {
             connection.end();
         }
@@ -428,6 +428,7 @@ class DB {
     }
 
     async query(connection, sql, params) {
+        dbLogger(sql);
         const [results] = await connection.query(sql, params);
         return results;
     }

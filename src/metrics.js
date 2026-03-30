@@ -58,7 +58,7 @@ function requestTracker(req, res, next) {
         const route = (req.baseUrl + (req.route?.path || ''))
             .replace(/^\/api/, '')
             .replace(/\/+$/, '');
-        const key = `${req.method}:${route || req.path}`;
+        const key = `${req.method}:${route || 'unmatched'}`;
         requests[key] = (requests[key] || 0) + 1;
         service_latency += (Date.now() - startTime);
         service_requests += 1;
@@ -184,7 +184,7 @@ function sendMetricsPeriodically(period) {
 
             sendMetricsToGrafana(metrics);
         } catch (error) {
-            console.log('Error sending metrics', error);
+            console.error('Error sending metrics', error);
         }
     }, period);
     timer.unref()
