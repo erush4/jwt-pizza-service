@@ -50,15 +50,16 @@ function addLoginMetric(failed) {
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
+
     if (req.method === 'OPTIONS' || req.method === 'HEAD' || req.originalUrl.includes('/docs')) {
         return next();
     }
     const startTime = Date.now();
     res.on('finish', () => {
-        const route = (req.baseUrl + (req.route?.path || ''))
-            .replace(/^\/api/, '')
-            .replace(/\/+$/, '');
-        const key = `${req.method}:${route || 'unmatched'}`;
+        const route = req.route ?
+            (req.baseUrl + req.route.path).replace(/^\/api/, '').replace(/\/+$/, '') || '/' :
+            'unmatched';
+        const key = `${req.method}:${route}`;
         requests[key] = (requests[key] || 0) + 1;
         service_latency += (Date.now() - startTime);
         service_requests += 1;

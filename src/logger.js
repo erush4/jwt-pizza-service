@@ -4,7 +4,9 @@ function httpLogger(req, res, next) {
     let send = res.send;
 
     res.send = (resBody) => {
-        const path = (req.baseUrl + (req.route?.path || '')).replace(/^\/api/, '').replace(/\/+$/, '') || '/';
+        const path = req.route ?
+            (req.baseUrl + req.route.path).replace(/^\/api/, '').replace(/\/+$/, '') || '/' :
+            req.originalUrl;
         const logData = {
             authorized: !!req.headers.authorization, path: path,
             method: req.method,
