@@ -2,8 +2,9 @@ const config = require("./config.js");
 
 function httpLogger(req, res, next) {
     let send = res.send;
-    const path = (req.baseUrl + (req.route?.path || '')).replace(/^\/api/, '').replace(/\/+$/, '') || '/';
+
     res.send = (resBody) => {
+        const path = (req.baseUrl + (req.route?.path || '')).replace(/^\/api/, '').replace(/\/+$/, '') || '/';
         const logData = {
             authorized: !!req.headers.authorization, path: path,
             method: req.method,
