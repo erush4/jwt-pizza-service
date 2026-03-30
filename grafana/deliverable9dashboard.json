@@ -5,8 +5,8 @@
     "name": "etwsvsn",
     "namespace": "stacks-1549030",
     "uid": "7ffb04d8-328b-4982-9a4d-be0e3a218b1a",
-    "resourceVersion": "1774849882496324",
-    "generation": 49,
+    "resourceVersion": "1774852186665092",
+    "generation": 51,
     "creationTimestamp": "2026-03-05T23:08:22Z",
     "labels": {
       "grafana.app/deprecatedInternalID": "3075713551126528"
@@ -16,7 +16,7 @@
       "grafana.app/folder": "",
       "grafana.app/saved-from-ui": "Grafana Cloud",
       "grafana.app/updatedBy": "user:cff56juif0ef4f",
-      "grafana.app/updatedTimestamp": "2026-03-30T05:51:22Z"
+      "grafana.app/updatedTimestamp": "2026-03-30T06:29:46Z"
     }
   },
   "spec": {
@@ -1560,7 +1560,7 @@
                         "name": "grafanacloud-logs"
                       },
                       "spec": {
-                        "direction": "forward",
+                        "direction": "backward",
                         "editorMode": "builder",
                         "expr": "{component=\"jwt-pizza-service\"}",
                         "legendFormat": "",
@@ -1584,7 +1584,7 @@
               "options": {
                 "dedupStrategy": "none",
                 "displayedFields": [],
-                "enableInfiniteScrolling": false,
+                "enableInfiniteScrolling": true,
                 "enableLogDetails": true,
                 "fontSize": "small",
                 "prettifyLogMessage": false,
@@ -1594,7 +1594,7 @@
                 "showLevel": true,
                 "showLogAttributes": false,
                 "showTime": true,
-                "sortOrder": "Ascending",
+                "sortOrder": "Descending",
                 "syntaxHighlighting": true,
                 "timestampResolution": "ms",
                 "unwrappedColumns": false,
@@ -1770,30 +1770,6 @@
                         "value": {
                           "fixedColor": "green",
                           "mode": "fixed"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "__systemRef": "hideSeriesFrom",
-                    "matcher": {
-                      "id": "byNames",
-                      "options": {
-                        "mode": "exclude",
-                        "names": [
-                          "[GET] /application.inc"
-                        ],
-                        "prefix": "All except:",
-                        "readOnly": true
-                      }
-                    },
-                    "properties": [
-                      {
-                        "id": "custom.hideFrom",
-                        "value": {
-                          "legend": false,
-                          "tooltip": true,
-                          "viz": true
                         }
                       }
                     ]
