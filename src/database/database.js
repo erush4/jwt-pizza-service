@@ -14,10 +14,10 @@ class DB {
     async getNumActiveUsers() {
         const connection = await this.getConnection();
         try {
-            const [authResult] = await connection.query(`SELECT COUNT(DISTINCT userId) as count
+            const authResult = await connection.query(`SELECT COUNT(DISTINCT userId) as count
                                                          FROM auth
                                                          WHERE lastActiveTime > DATE_SUB(NOW(), INTERVAL ? MINUTE)`, [config.authTimeoutValue]);
-            return authResult.count
+            return authResult[0].count
         } finally {
             connection.end();
         }
