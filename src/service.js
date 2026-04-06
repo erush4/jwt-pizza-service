@@ -8,6 +8,7 @@ const config = require("./config.js");
 const {requestTracker} = require("./metrics");
 const {httpLogger} = require("./logger.js");
 const {unhandledErrorLogger} = require("./logger");
+const {generateMetricData} = require("./generateMetricData");
 
 const app = express();
 app.use(express.json());
@@ -27,6 +28,14 @@ apiRouter.use("/auth", authRouter);
 apiRouter.use("/user", userRouter);
 apiRouter.use("/order", orderRouter);
 apiRouter.use("/franchise", franchiseRouter);
+apiRouter.use("/test/traffic", (req, res) => {
+    const num_minutes = req.body.duration;
+    if (!num_minutes) {
+        return res.status(400).send({message: "improper usage"})
+    }
+    generateMetricData(num_minutes * 60 * 1000);
+    return res.status(200).send({message: "Traffic starting"});
+});
 
 apiRouter.use("/docs", (req, res) => {
     res.json({

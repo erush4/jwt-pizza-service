@@ -1,4 +1,6 @@
-const BASE_URL = "http://localhost:3000/api";//config.deploymentUrl + "/api";
+const config = require("./config");
+
+const BASE_URL = config.deploymentUrl + "/api";
 
 let menu = []
 const franchiseId = 1;
@@ -86,7 +88,6 @@ async function badLogin() {
         throw new Error("badLogin succeeded");
     }
     await res.json();
-    console.log("bad login");
     return null;
 }
 
@@ -104,7 +105,6 @@ async function registerNewUser() {
     if (users.length > 15) {
         users.shift();
     }
-    console.log("new user registered")
     return data.token;
 }
 
@@ -179,18 +179,18 @@ async function makeBadOrder(token) {
         throw new Error("pizza order succeeded");
     }
     await res.json();
-    console.log("bad order");
     return token;
 }
 
-async function simulateDiner() {
-    const endTime = Date.now() + 60 * 60 * 1000; // 60 minutes in ms
+async function simulateDiner(time) {
+    console.log(`starting with time ${time}`);
+    const endTime = Date.now() + time;
     let token = null
     let actions = [];
     let action;
     try {
-        console.log("starting loop")
         while (Date.now() < endTime) {
+            console.log("looping");
             if (token) {
                 action = getRandomAction(loggedInDinerActions);
             } else {
@@ -204,7 +204,6 @@ async function simulateDiner() {
                 await sleep(3_000);
             } catch (e) {
                 if (e.message === "expired token") {
-                    console.log('expired token');
                     await logout(token);
                     token = await login();
                 } else {
@@ -226,14 +225,14 @@ async function simulateDiner() {
     }
 }
 
-async function main() {
+async function generateMetricData(time) {
+    console.log("starting");
     for (let i = 0; i < users.length; i += 1) {
         let token;
         try {
             token = await loginUser(users[i]);
         } catch (e) {
             if (e.message === "loginUser failed: 401") {
-                console.log(e);
                 token = await registerUser(users[i]);
             } else {
                 console.error(e)
@@ -244,18 +243,9 @@ async function main() {
     }
     await getMenu(undefined);
     await Promise.all([
-        simulateDiner(),
-        simulateDiner(),
-        simulateDiner(),
-        simulateDiner(),
-        simulateDiner(),
-        simulateDiner(),
-        simulateDiner(),
-        simulateDiner(),
-        simulateDiner(),
-        simulateDiner(),
+        simulateDiner(time), simulateDiner(time), simulateDiner(time), simulateDiner(time), simulateDiner(time),
     ])
     return 0;
 }
 
-main();
+module.exports = {generateMetricData};
