@@ -87,7 +87,7 @@ jobs:
                 endpointUrl: '${{ secrets.LOGGING_ENDPOINT_URL }}',
                 apiKey: '${{ secrets.LOGGING_API_KEY }}',
             },
-          deploymentUrl: "https://pizza-service.329ethanr.click"
+          deploymentUrl: 'https://pizza-service.329ethanr.click',
           };" > src/config.js
 
       - name: Tests
