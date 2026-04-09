@@ -60,7 +60,7 @@ Other website functionality was unaffected.
 The entire development team (of 1) was immediately aware of the issue and began diagnosing the problem using metrics
 stored in Grafana.
 
-Although the issue was quickly identified, steps were not taken to mitigate the problem for several minutes to ensure
+Although a solution was quickly identified, steps were not taken to mitigate the problem for several minutes to ensure
 Grafana alerts would appropriately trigger. This was done as a test of the alert software, so that if future incidents
 occur while the dev team is _not_ actively viewing the metrics, they will be notified.
 
