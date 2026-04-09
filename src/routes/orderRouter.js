@@ -90,6 +90,17 @@ orderRouter.get("/", authRouter.authenticateToken, asyncHandler(async (req, res)
 orderRouter.post("/", authRouter.authenticateToken, asyncHandler(async (req, res) => {
     let failed = false;
     const orderReq = req.body;
+
+    const menuItems = await DB.getMenu();
+
+    orderReq.items = orderReq.items.map(item => {
+        const menuItem = menuItems.find(m => m.id === item.menuId);
+        if (!menuItem) {
+            throw new StatusCodeError(`Invalid menu item: ${item.menuId}`, 400);
+        }
+        return {...menuItem, menuId: menuItem.id}; // keep menuId for the DB layer
+    });
+
     const order = await DB.addDinerOrder(req.user, orderReq);
     const startTime = Date.now();
     const factoryReq = JSON.stringify({

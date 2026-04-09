@@ -8,6 +8,8 @@ module.exports = {
         "src/**/*.js",
         "!src/metrics.js",
         "!src/index.js",
-        "!src/init.js", "!src/logger.js",
+        "!src/init.js",
+        "!src/logger.js",
+        "!src/generateMetricData.js"
     ]
 };

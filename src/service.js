@@ -9,9 +9,24 @@ const {requestTracker} = require("./metrics");
 const {httpLogger} = require("./logger.js");
 const {unhandledErrorLogger} = require("./logger");
 const {generateMetricData} = require("./generateMetricData");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 
 const app = express();
+//TODO uncomment this for production
+app.set('trust proxy', 1)
+
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 500,
+    message: {message: 'Hold your horses. Take a deep breath. You do not need this many pizzas. Try again in 15 minutes.'}
+})
+
+
+
 app.use(express.json());
+app.use(helmet())
+app.use(globalLimiter)
 app.use(setAuthUser);
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
@@ -51,12 +66,6 @@ app.get("/", (req, res) => {
     });
 });
 
-app.get('/debug-ip', (req, res) => {
-    res.json({
-        ip: req.ip, ips: req.ips, forwarded: req.headers['x-forwarded-for']
-    })
-})
-
 app.use("*", (req, res) => {
     res.status(404).json({
         message: "unknown endpoint",
@@ -71,11 +80,5 @@ app.use((err, req, res, next) => {
     res.status(err.statusCode ?? 500).json({message: err.message});
     next();
 });
-
-app.get('/debug-ip', (req, res) => {
-    res.json({
-        ip: req.ip, ips: req.ips, forwarded: req.headers['x-forwarded-for']
-    })
-})
 
 module.exports = app;
