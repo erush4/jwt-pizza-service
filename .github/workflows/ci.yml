@@ -42,7 +42,7 @@ jobs:
           module.exports = {
             jwtSecret: '${{ secrets.JWT_SECRET }}',
             authTimeoutValue: 20,
-            httpJwtSecret: 'test_secret',
+            httpJwtSecret: '${{secrets.HTTP_SECRET}}',
             db: {
               connection: {
                 host: '127.0.0.1',
