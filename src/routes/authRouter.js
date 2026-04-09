@@ -46,7 +46,6 @@ authRouter.docs = [
     },
 ];
 
-
 async function setAuthUser(req, res, next) {
     const token = readAuthToken(req);
     if (token) {

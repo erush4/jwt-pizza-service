@@ -101,6 +101,7 @@ orderRouter.post("/", authRouter.authenticateToken, asyncHandler(async (req, res
         return {...menuItem, menuId: menuItem.id}; // keep menuId for the DB layer
     });
 
+
     const order = await DB.addDinerOrder(req.user, orderReq);
     const startTime = Date.now();
     const factoryReq = JSON.stringify({

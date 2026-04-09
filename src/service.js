@@ -8,21 +8,19 @@ const config = require("./config.js");
 const {requestTracker} = require("./metrics");
 const {httpLogger} = require("./logger.js");
 const {unhandledErrorLogger} = require("./logger");
-const {generateMetricData} = require("./generateMetricData");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const {decodeBody} = require("./routes/decodeBody");
 
 const app = express();
-//TODO uncomment this for production
+
 app.set('trust proxy', 1)
 
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 500,
-    message: {message: 'Hold your horses. Take a deep breath. You do not need this many pizzas. Try again in 15 minutes.'}
+    message: {message: 'Hold your horses. Take a deep breath. You do not need this many pizzas (don\'t tell the CEO I said that). Try again in 15 minutes.'}
 })
-
-
 
 app.use(express.json());
 app.use(helmet())
@@ -36,21 +34,12 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use("/", httpLogger);
 const apiRouter = express.Router();
-app.use("/api", requestTracker, apiRouter);
+app.use("/api", decodeBody, httpLogger, requestTracker, apiRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/user", userRouter);
 apiRouter.use("/order", orderRouter);
 apiRouter.use("/franchise", franchiseRouter);
-apiRouter.use("/test/traffic", (req, res) => {
-    const num_minutes = req.body.duration;
-    if (!num_minutes) {
-        return res.status(400).send({message: "improper usage"})
-    }
-    generateMetricData(num_minutes * 60 * 1000);
-    return res.status(200).send({message: "Traffic starting"});
-});
 
 apiRouter.use("/docs", (req, res) => {
     res.json({
@@ -60,7 +49,7 @@ apiRouter.use("/docs", (req, res) => {
     });
 });
 
-app.get("/", (req, res) => {
+app.get("/", httpLogger, (req, res) => {
     res.json({
         message: "welcome to JWT Pizza", version: version.version,
     });
