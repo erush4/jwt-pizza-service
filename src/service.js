@@ -66,4 +66,10 @@ app.use((err, req, res, next) => {
     next();
 });
 
+app.get('/debug-ip', (req, res) => {
+    res.json({
+        ip: req.ip, ips: req.ips, forwarded: req.headers['x-forwarded-for']
+    })
+})
+
 module.exports = app;
