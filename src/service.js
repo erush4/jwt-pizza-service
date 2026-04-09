@@ -51,6 +51,12 @@ app.get("/", (req, res) => {
     });
 });
 
+app.get('/debug-ip', (req, res) => {
+    res.json({
+        ip: req.ip, ips: req.ips, forwarded: req.headers['x-forwarded-for']
+    })
+})
+
 app.use("*", (req, res) => {
     res.status(404).json({
         message: "unknown endpoint",
