@@ -1,5 +1,4 @@
-const path = require('path');
-jest.mock(path.resolve(__dirname, './src/routes/decodeBody.js'));
+jest.mock('./src/routes/decodeBody.js');
 
 const config = require("./src/config");
 const mysql = require("mysql2/promise");
