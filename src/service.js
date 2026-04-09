@@ -10,7 +10,7 @@ const {httpLogger} = require("./logger.js");
 const {unhandledErrorLogger} = require("./logger");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
-const {decodeBody} = require("./decodeBody");
+const {decodeBody} = require("./routes/decodeBody");
 
 const app = express();
 

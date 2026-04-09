@@ -1,5 +1,5 @@
 const {jwtVerify} = require('jose');
-const {httpJwtSecret} = require("./config");
+const {httpJwtSecret} = require("../config");
 
 const decodeBody = async (req, res, next) => {
     if (req.body) {

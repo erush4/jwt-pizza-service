@@ -3,7 +3,9 @@ module.exports = {
     setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
     collectCoverage: true,
     coverageReporters: ["json-summary", "text"],
-    testEnvironment: "node",
+    testEnvironment: "node", moduleNameMapper: {
+        '^.*/routes/decodeBody$': '<rootDir>/src/routes/__mocks__/decodeBody.js'
+    },
     collectCoverageFrom: [
         "src/**/*.js",
         "!src/metrics.js",
