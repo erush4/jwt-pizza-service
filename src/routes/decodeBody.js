@@ -7,7 +7,9 @@ const decodeBody = async (req, res, next) => {
         try {
             const key = new TextEncoder().encode(httpJwtSecret);
             const {payload} = await jwtVerify(reqBody.signature, key);
+            console.log(reqBody);
             const {iat, exp, ...decodedBody} = payload;
+            console.log(decodedBody);
 
             if (JSON.stringify(decodedBody) !== JSON.stringify(reqBody.body)) {
                 return res.status(418).send({message: "lmao"});
