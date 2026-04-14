@@ -249,7 +249,7 @@
 | Classification | Insecure Design                                                                                          |
 | Severity       | 0                                                                                                        |
 | Description    | Makes a bunch of factory API calls to generate huge latency. Also can just break with regular DOS stuff. |
-| Images         | ![DOS](jayAttackImages/DOS.png) <br/> Yeah we broke                                                      |
+| Images         | ![DOS](jayAttackImages/DOS_fail.png) <br/> No issues ordering                                            |
 | Corrections    | Cap pizza purchases to 19. Or find a way to make factory calls in parts. Throttle requests.              |
 
 # Learning Summary
