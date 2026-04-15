@@ -254,3 +254,12 @@
 
 # Learning Summary
 
+- There are many, many ways that software can be insecure
+  - The BYU CS program only skims the surface of security
+- HTTP requests can be made more secure than just HTTP
+- Secure cryptography can be weakened by poor key choice
+- Adding layers of security helps to reduce vulnerability *impact* as well as number
+- Many critical vulnerabilities can be fixed with a few lines of code
+  - Many critical vulnerabilities are *caused* by a few lines of code
+- TDD and test suites can give a false sense of security if they do not test malicious inputs or are improperly written
+- Good security starts with good code hygiene and practices
