@@ -64,7 +64,7 @@
 | Images         | ![DOS](jayAttackImages/DOS.png) <br/> Yeah we broke                                                      |
 | Corrections    | Cap pizza purchases to 19. Or find a way to make factory calls in parts. Throttle requests.              |
 
-## Peer Attacks
+## Ethan's Attacks
 
 ### Attack 1: JWT Cracker
 
