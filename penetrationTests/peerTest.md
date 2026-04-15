@@ -128,7 +128,7 @@
 
 # Attacks on Ethan
 
-## Self Attacks
+## Ethan's Attacks
 
 ### Attack 1: JWT Cracker
 
@@ -190,7 +190,7 @@
 | Images           | ![Fake Stores](ethanAttackImages/fakestore.png)<br/> Orders can be routed to nonexistent stored                                                              |
 | Corrections      | Verify that stores and franchises exist. Also, consider adding encrypted signature from website to reduce likelihood of non-website service traffic. (done!) |
 
-## Peer Attacks
+## Jay's Attacks
 
 ### Attack 1
 
